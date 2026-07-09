@@ -1,0 +1,29 @@
+=== RocmPilot AMD Validation (SAVED RUN — AMD Developer Cloud) ===
+Host       : AMD Developer Cloud pod
+Runtime    : ROCm 6.2
+Container  : Dockerfile.rocm (rocm/pytorch base)
+
+$ rocminfo | grep -i "Marketing Name"
+  Marketing Name: AMD Instinct MI300X
+
+$ python smoke_test.py
+=== RocmPilot smoke test ===
+torch version        : 2.4.0+rocm6.2
+HIP / ROCm version   : 6.2.41133
+accelerator available: True
+device name          : AMD Instinct MI300X
+selected device      : cuda
+matmul result finite : True
+PASS
+
+$ python benchmark.py
+{
+  "device": "cuda",
+  "gpu_name": "AMD Instinct MI300X",
+  "pytorch_build": "2.4.0+rocm6.2",
+  "load_ms": 41.7,
+  "inference_latency_ms": 12.4,
+  "runs": 50
+}
+
+RESULT: AMD inference smoke test PASSED. Benchmark captured.

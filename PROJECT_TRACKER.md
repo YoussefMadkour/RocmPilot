@@ -1,0 +1,146 @@
+# RocmPilot Studio — Project Tracker
+
+Living doc. Check boxes as you go (`- [x]`). Each task is tagged **[Y]** Youssef or
+**[J]** Jithandra. Phase is "done" only when every acceptance criterion passes.
+
+- **Y = Youssef** — senior AI eng. Owns the intelligence: agents, prompts, scanner
+  core, scoring, validation, product/demo direction.
+- **J = Jithandra** — owns the frontend cockpit, *and* takes scoped, testable
+  backend tasks to ramp up (marked **[J] backend**).
+
+Legend: 🔴 not started · 🟡 in progress · 🟢 done
+
+---
+
+## Split at a glance
+
+| Layer | Youssef | Jithandra |
+|-------|---------|-----------|
+| Frontend | product/UX review | **all 6 screens + design + API client** |
+| Backend – AI (`agents/`) | **all 4 Fireworks agents + prompts** | — |
+| Backend – core (`services/`) | scanner core, scoring, patch logic, validation | **add scanner patterns, templates, tests, artifact-zip endpoint** |
+| Sample / fixtures | validation fixtures | **sample repos** |
+| Infra | — | **Docker / compose / CI** |
+| Docs & demo | demo script, positioning | setup docs, screenshots |
+
+Why this split: Youssef holds the parts that decide whether the project *feels
+real* (agents, scoring, the ROCm nuance). Jithandra owns the whole visible surface
+plus low-risk backend slices (patterns, tests, templates) that are easy to verify
+and teach the codebase without gating the AI path.
+
+---
+
+## Phase 0 — Scaffold  🟢 (done this session)
+- [x] Repo structure, runnable FastAPI backend, typed frontend client
+- [x] Deterministic scanner + scoring (demo curve **37 → 72 → 86**)
+- [x] Fireworks agents with offline fallback
+- [x] Sample CUDA-first repo, ROCm templates, replay validation fixture
+- [x] Docker + compose, docs, this tracker
+**Acceptance:** `docker compose up` builds; sample run completes end to end. ✅ verified via backend TestClient.
+
+---
+
+## Phase 1 — Core loop solid
+**Backend [Y]**
+- [ ] Harden `repo_service.clone_repo` (URL validation, size/time limits, private via `GITHUB_TOKEN`)
+- [ ] Expand scanner pattern catalogue; unit-test each category
+- [ ] Lock scoring weights against 3 real repos (nanoGPT, YOLOv5, Real-ESRGAN)
+
+**Backend [J] backend** (ramp-up tasks)
+- [ ] Add ≥5 new patterns to `scanner_service.PATTERNS` (e.g. `pin_memory`, `torch.backends.cudnn`, `apex`, `bitsandbytes`, `flash-attn`) with a test each
+- [ ] Write `backend/tests/test_scanner.py` + `test_scoring.py` (pytest)
+- [ ] Add `GET /api/runs` (list runs) endpoint
+
+**Frontend [J]**
+- [ ] Run the **frontend-design** skill; commit a design direction note
+- [ ] App shell + nav (Intake → Scan → Plan → Patch → Validate → Report)
+- [ ] **Intake** screen: repo URL input, "use sample" button, create run
+
+**Acceptance:**
+- Scanner has ≥15 patterns, all covered by a passing `pytest`.
+- Frontend shell navigates all 6 routes; Intake creates a run and routes to Scan.
+
+---
+
+## Phase 2 — Scan + Plan
+**Backend [Y]**
+- [ ] Tune Migration Planner prompt against real findings; verify JSON validity
+- [ ] Patch Explainer wired to real snippets
+
+**Frontend [J]**
+- [ ] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary
+- [ ] **Plan** screen: agent summary, prioritized actions, manual-blockers list, agent-activity timeline
+
+**Acceptance:**
+- Scan screen renders all findings from a real repo with working severity/category filtering.
+- Plan screen shows a coherent plan (works with AND without a Fireworks key).
+
+---
+
+## Phase 3 — Patch + Validate
+**Backend [Y]**
+- [ ] Improve patch transforms (model `.cuda()`, `.to("cuda")` → resolved device)
+- [ ] Implement `live` validation mode (build `Dockerfile.rocm`, run smoke+bench, parse logs)
+- [ ] Wire Failure Diagnoser into the validate path on failure
+
+**Backend [J] backend**
+- [ ] Refine the three templates so generated artifacts run clean on ROCm
+- [ ] Add `GET /api/runs/{id}/artifacts.zip` (bundle all artifacts for download)
+
+**Frontend [J]**
+- [ ] **Patch** screen: diff viewer, artifact tabs (Dockerfile/​smoke/​benchmark), download
+- [ ] **Validate** screen: AMD validation card, terminal-style log panel, **clear replay-mode badge**, failure-diagnosis panel
+
+**Acceptance:**
+- Patch screen shows a real diff + 4 downloadable artifacts.
+- Validate screen shows pass/fail, GPU name, latency; replay is clearly labeled.
+
+---
+
+## Phase 4 — Report + polish + ship
+**Backend [Y]**
+- [ ] Report Writer prompt produces a judge-ready report from real data
+
+**Frontend [J]**
+- [ ] **Report** screen: before/after score comparison, rendered Markdown, artifact list, download report
+- [ ] Visual polish pass (dark cockpit, consistent spacing/badges)
+
+**Infra [J]**
+- [ ] Verify clean `docker compose up --build` from scratch on a fresh clone
+- [ ] Optional: GitHub Actions (lint backend + build frontend)
+
+**Acceptance:**
+- Full flow runs in the UI in < 3 minutes on a fresh clone.
+- Report downloads; before/after score visible.
+
+---
+
+## Phase 5 — Submission
+- [ ] [Y] Record 3-min demo (follow `docs/DEMO_SCRIPT.md`)
+- [ ] [Y] Submission write-up + positioning
+- [ ] [J] Screenshots + README setup polish
+- [ ] [Both] Dry-run the demo twice; fix anything that stutters
+
+---
+
+## Showcase repos (verified CUDA-first — July 2026)
+
+| Repo | Why it's a good showcase | Confirmed patterns |
+|------|--------------------------|--------------------|
+| [karpathy/nanoGPT](https://github.com/karpathy/nanoGPT) | **Primary.** Small, famous, fast to clone, clean text-gen demo. | `device = 'cuda'`, `device = f'cuda:{ddp_local_rank}'`, `torch.backends.cuda.matmul.allow_tf32` |
+| [ultralytics/yolov5](https://github.com/ultralytics/yolov5) | Very recognizable, **visual** (bounding boxes), ships a GPU Dockerfile. | `FROM pytorch/pytorch:…cuda12.8…`, `--gpus all`, `--ipc=host` |
+| [xinntao/Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) | **Most visual** (before/after image upscaling); great for judges. | fp16 GPU inference, `--gpu-id`, `half=` |
+| [openai/whisper](https://github.com/openai/whisper) | Household name; audio angle. Note: already has a CPU fallback, so fewer hard blockers — use as a "already partly ready" contrast. | `default="cuda" if torch.cuda.is_available() else "cpu"` |
+
+Recommendation: demo with **nanoGPT** (clean, believable score jump) and keep
+**Real-ESRGAN** as the "wow, it's visual" backup. YOLOv5 is the strongest
+Docker-blocker story.
+
+---
+
+## Limitations & future work
+- v1 = PyTorch/HF **inference** repos. Training repos partially supported.
+- Custom CUDA kernels (`.cu`/`.cuh`), native extensions → flagged, not solved.
+- `live` AMD validation is scaffolded; demo runs on a **saved** AMD run (replay).
+- No automatic GitHub PR creation yet (roadmap).
+- Single-run filesystem store; no multi-user history yet.

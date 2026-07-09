@@ -1,0 +1,8 @@
+{
+  "device": "cuda",
+  "gpu_name": "AMD Instinct MI300X",
+  "pytorch_build": "2.4.0+rocm6.2",
+  "load_ms": 41.7,
+  "inference_latency_ms": 12.4,
+  "runs": 50
+}

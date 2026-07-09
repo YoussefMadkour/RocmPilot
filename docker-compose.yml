@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: ./backend
+    container_name: rocmpilot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - FIREWORKS_API_KEY=${FIREWORKS_API_KEY}
+      - FIREWORKS_MODEL=${FIREWORKS_MODEL:-accounts/fireworks/models/llama-v3p1-70b-instruct}
+      - VALIDATION_MODE=${VALIDATION_MODE:-replay}
+      - AMD_VALIDATION_LOG_PATH=${AMD_VALIDATION_LOG_PATH:-/app/app/fixtures/validation_log.txt}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    volumes:
+      - ./backend/runs:/app/runs
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: rocmpilot-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # In the browser, calls go to localhost:8000 (host-mapped backend port).
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    depends_on:
+      - backend
+    restart: unless-stopped

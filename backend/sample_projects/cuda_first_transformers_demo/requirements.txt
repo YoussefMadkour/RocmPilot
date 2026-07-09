@@ -1,0 +1,4 @@
+# CUDA-specific pins — an NVIDIA-only wheel index.
+torch==2.4.0+cu121
+--extra-index-url https://download.pytorch.org/whl/cu121
+cupy-cuda12x==13.2.0
