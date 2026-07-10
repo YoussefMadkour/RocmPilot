@@ -141,6 +141,8 @@ Docker-blocker story.
 ## Limitations & future work
 - v1 = PyTorch/HF **inference** repos. Training repos partially supported.
 - Custom CUDA kernels (`.cu`/`.cuh`), native extensions → flagged, not solved.
+  **Tier 2** repos (detectron2, mmcv, flash-attention, apex) are deferred until
+  the Tier 1 application-repo pipeline is polished — see `docs/BENCHMARK_REPOS.md`.
 - `live` AMD validation is scaffolded; demo runs on a **saved** AMD run (replay).
 - No automatic GitHub PR creation yet (roadmap).
 - Single-run filesystem store; no multi-user history yet.

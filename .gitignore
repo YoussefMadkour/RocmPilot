@@ -27,6 +27,9 @@ yarn-error.log*
 backend/runs/*
 !backend/runs/.gitkeep
 
+# --- Offline benchmark repo clones (large 3rd-party sources; see docs/BENCHMARK_REPOS.md) ---
+benchmark_repos/
+
 # --- OS / editor ---
 .DS_Store
 .idea/
