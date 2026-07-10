@@ -1,6 +1,6 @@
 """Render a ROCm-ready Dockerfile from a template.
 
-OWNER: Jithandra (templates) + Youssef (wiring). Keep the base image simple and
+OWNER: Jithendra (templates) + Youssef (wiring). Keep the base image simple and
 demo-reliable. The template lives in app/templates/Dockerfile.rocm.template.
 """
 from __future__ import annotations

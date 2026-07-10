@@ -1,6 +1,6 @@
 # RocmPilot Studio — design direction
 
-*(Phase 1 note, as requested in FOR_JITHANDRA.md — keep every screen consistent with this.)*
+*(Phase 1 note, as requested in FOR_JITHENDRA.md — keep every screen consistent with this.)*
 
 ## Concept: engine-bay cockpit
 

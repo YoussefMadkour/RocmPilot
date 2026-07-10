@@ -1,11 +1,11 @@
 # RocmPilot Studio — Project Tracker
 
 Living doc. Check boxes as you go (`- [x]`). Each task is tagged **[Y]** Youssef or
-**[J]** Jithandra. Phase is "done" only when every acceptance criterion passes.
+**[J]** Jithendra. Phase is "done" only when every acceptance criterion passes.
 
 - **Y = Youssef** — senior AI eng. Owns the intelligence: agents, prompts, scanner
   core, scoring, validation, product/demo direction.
-- **J = Jithandra** — owns the frontend cockpit, *and* takes scoped, testable
+- **J = Jithendra** — owns the frontend cockpit, *and* takes scoped, testable
   backend tasks to ramp up (marked **[J] backend**).
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done
@@ -14,7 +14,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 
 ## Split at a glance
 
-| Layer | Youssef | Jithandra |
+| Layer | Youssef | Jithendra |
 |-------|---------|-----------|
 | Frontend | product/UX review | **all 6 screens + design + API client** |
 | Backend – AI (`agents/`) | **all 4 Fireworks agents + prompts** | — |
@@ -24,7 +24,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | Docs & demo | demo script, positioning | setup docs, screenshots |
 
 Why this split: Youssef holds the parts that decide whether the project *feels
-real* (agents, scoring, the ROCm nuance). Jithandra owns the whole visible surface
+real* (agents, scoring, the ROCm nuance). Jithendra owns the whole visible surface
 plus low-risk backend slices (patterns, tests, templates) that are easy to verify
 and teach the codebase without gating the AI path.
 
@@ -40,7 +40,7 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 1 — Core loop solid
+## Phase 1 — Core loop solid  🟡 (all [J] tasks done + verified; [Y] tasks open)
 **Backend [Y]**
 - [ ] Harden `repo_service.clone_repo` (URL validation, size/time limits, private via `GITHUB_TOKEN`)
 - [ ] Expand scanner pattern catalogue; unit-test each category

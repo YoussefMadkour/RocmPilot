@@ -89,14 +89,14 @@ backend/    FastAPI app — services/ (deterministic) + agents/ (Fireworks)
 frontend/   Next.js cockpit UI + typed API client (lib/api.ts)
 docs/       ARCHITECTURE, API_CONTRACT, DEMO_SCRIPT
 PROJECT_TRACKER.md   phases, acceptance criteria, who-owns-what
-FOR_JITHANDRA.md     onboarding for the frontend/backend split
+FOR_JITHENDRA.md     onboarding for the frontend/backend split
 ```
 
 ## Team
 
 - **Youssef** — backend intelligence: scanner, scoring, Fireworks agents, prompts,
   validation, product/demo direction.
-- **Jithandra** — frontend cockpit (Next.js + design), plus scoped backend work to
+- **Jithendra** — frontend cockpit (Next.js + design), plus scoped backend work to
   ramp up. See `PROJECT_TRACKER.md`.
 
 ## Limitations & roadmap
