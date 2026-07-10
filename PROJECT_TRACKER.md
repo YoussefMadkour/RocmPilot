@@ -47,14 +47,14 @@ and teach the codebase without gating the AI path.
 - [ ] Lock scoring weights against 3 real repos (nanoGPT, YOLOv5, Real-ESRGAN)
 
 **Backend [J] backend** (ramp-up tasks)
-- [ ] Add ≥5 new patterns to `scanner_service.PATTERNS` (e.g. `pin_memory`, `torch.backends.cudnn`, `apex`, `bitsandbytes`, `flash-attn`) with a test each
-- [ ] Write `backend/tests/test_scanner.py` + `test_scoring.py` (pytest)
-- [ ] Add `GET /api/runs` (list runs) endpoint
+- [x] Add ≥5 new patterns to `scanner_service.PATTERNS` (added 6: `pin_memory`, `torch.backends.cudnn`, `torch.backends.cuda`/TF32, `apex`, `bitsandbytes`, `flash-attn`) with a test each
+- [x] Write `backend/tests/test_scanner.py` + `test_scoring.py` (pytest — 29 passing)
+- [x] Add `GET /api/runs` (list runs) endpoint
 
 **Frontend [J]**
-- [ ] Run the **frontend-design** skill; commit a design direction note
-- [ ] App shell + nav (Intake → Scan → Plan → Patch → Validate → Report)
-- [ ] **Intake** screen: repo URL input, "use sample" button, create run
+- [x] Run the **frontend-design** skill; commit a design direction note (`frontend/DESIGN.md`)
+- [x] App shell + nav (Intake → Scan → Plan → Patch → Validate → Report)
+- [x] **Intake** screen: repo URL input, "use sample" button, create run
 
 **Acceptance:**
 - Scanner has ≥15 patterns, all covered by a passing `pytest`.
