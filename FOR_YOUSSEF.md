@@ -59,5 +59,62 @@ commit) and did not touch `agents/` or `scoring_service.py`.
    parseable PASS/FAIL markers to make that log-parsing easier, and the smoke
    test takes `--require-gpu` for CI.
 
+## Ideas to make it better (full-codebase pass, 2026-07-10)
+
+Tagged by owner: **[Y]** you, **[J]** me, **[Both]** pair on it.
+
+### Demo-critical — do before submission
+
+1. **[J — fixed]** `docker compose up --build` was broken: `frontend/Dockerfile`
+   copies `/app/public` but the directory didn't exist. Added
+   `frontend/public/.gitkeep`; the full clean-clone compose verify is still my
+   Phase 4 task.
+2. **[Both] Score story vs reality.** `DEMO_SCRIPT.md` promises "before ≈ 37",
+   but nanoGPT scans at **70** (few categories, capped penalties). Either the
+   weights come down harder on `cuda_hardcoding` density (your Phase 1 lock
+   task) or the demo leads with the bundled sample / YOLOv5 (strongest Docker
+   story). Decide once — script and weights should tell the same story.
+3. **[Y]** The two encoding reads in `validation_service.py` need
+   `encoding="utf-8"` — the saved log renders `â€"` mojibake in the UI on
+   Windows machines (i.e., my demo machine).
+4. **[Y]** `artifacts.zip` never includes `readiness_report.md`:
+   `report_service.build()` writes the file but the report endpoint doesn't
+   append it to `state["artifacts"]`. One line in `main.py`; then "download
+   everything" is genuinely everything. Ping me and we'll do it together.
+
+### High-impact, low-risk
+
+5. **[Y→J] Wire the Patch Explainer.** `patch_explainer.explain()` is currently
+   called by nothing. If you add its output to `PatchResponse` (API-shape rule:
+   models + api.ts + contract), I'll render a "why this patch is safe" panel on
+   the Patch screen — that's a second visible Fireworks agent for judges.
+6. **[Both] Failure Diagnoser demo moment.** `failure_diagnoser.diagnose()` is
+   also unwired, and replay always passes, so judges never see it. Add a
+   `replay_fail` fixture (broken HIP log) + a `VALIDATION_MODE=replay_fail`
+   branch, and we can *show* the diagnoser in 10 seconds. My failure panel
+   already renders on failed runs and is waiting for a diagnosis field.
+7. **[Y] Scanner polish for real repos:** (a) two patterns matching one line
+   produces duplicate rows (e.g. `device = f'cuda:{rank}'` hits both the
+   device-string and ordinal patterns); dedupe per line or merge in the
+   response. (b) Findings in `.md`/docs files inflate counts — nanoGPT's README
+   examples get flagged like code. Downweight or tag them `docs` so the score
+   is driven by code.
+8. **[Y]** For `.cu`/`.cuh` manual blockers, point `recommended_action` at
+   AMD's HIPIFY tooling explicitly — AMD judges will notice the vocabulary.
+9. **[J]** "Recent runs" list on Intake (GET /api/runs already exists) — makes
+   the cockpit feel like a tool, not a one-shot demo.
+
+### If time allows
+
+10. **[Y]** Capture a *real* AMD Dev Cloud run into `fixtures/` (your TODO).
+    The refreshed templates print strictly parseable PASS/FAIL markers and
+    `smoke_test.py --require-gpu` exists for CI, so log parsing is easy now.
+11. **[J]** GitHub Actions: `pytest` + `next build` on push (Phase 4 optional).
+12. **[Both]** Emit the Dockerfile's CUDA-wheel filtering as a reviewable 5th
+    artifact (`requirements.rocm.txt`) — deterministic, and it makes the
+    "we remove NVIDIA assumptions" claim inspectable.
+13. **[Roadmap]** Auto-PR with `patch.diff`; SQLite run history; SSE streaming
+    of agent output while the planner thinks.
+
 Report screen (Phase 4 [J]) is my next slice. 🚀
 — Jithendra

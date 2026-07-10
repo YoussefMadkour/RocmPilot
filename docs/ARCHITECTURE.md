@@ -47,4 +47,7 @@
 ## Runtime
 
 - `docker compose up --build` → backend on `:8000`, frontend on `:3000`.
-- Backend Python 3.12 / FastAPI / uvicorn. Frontend Next.js 14 (standalone).
+- Backend Python 3.12 / FastAPI / uvicorn. Frontend Next.js 16 + React 19
+  (standalone output).
+- Backend tests live in `backend/tests` (pytest) — scanner patterns, scoring
+  weights, run store, and the artifacts.zip endpoint are all pinned.
