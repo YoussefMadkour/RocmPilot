@@ -3,13 +3,19 @@
 Prints a clear PASS/FAIL and enough environment detail to prove the repo runs on
 AMD. Note: on ROCm, torch.cuda.is_available() returns True and devices appear
 under the torch.cuda namespace — this is HIP, not NVIDIA CUDA.
+
+Exactly one of PASS or FAIL is always printed (log parsers rely on this).
+Pass --require-gpu to fail when no accelerator is present (e.g. in AMD CI).
 """
 import sys
+import traceback
 
 import torch
 
 
 def main() -> int:
+    require_gpu = "--require-gpu" in sys.argv
+
     print("=== RocmPilot smoke test ===")
     print(f"torch version        : {torch.__version__}")
 
@@ -19,7 +25,14 @@ def main() -> int:
     accel = torch.cuda.is_available()
     print(f"accelerator available: {accel}")
     if accel:
+        props = torch.cuda.get_device_properties(0)
         print(f"device name          : {torch.cuda.get_device_name(0)}")
+        print(f"device memory        : {props.total_memory / 1024**3:.1f} GiB")
+    else:
+        print("WARN: no accelerator — running on CPU")
+        if require_gpu:
+            print("FAIL")
+            return 1
 
     device = torch.device("cuda" if accel else "cpu")
     print(f"selected device      : {device}")
@@ -28,6 +41,8 @@ def main() -> int:
     a = torch.randn(512, 512, device=device)
     b = torch.randn(512, 512, device=device)
     c = (a @ b).sum().item()
+    if device.type == "cuda":
+        torch.cuda.synchronize()
 
     ok = torch.isfinite(torch.tensor(c)).item()
     print(f"matmul result finite : {ok}")
@@ -36,4 +51,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:  # noqa: BLE001 — a crash must still print a parseable FAIL
+        traceback.print_exc()
+        print("FAIL")
+        sys.exit(1)

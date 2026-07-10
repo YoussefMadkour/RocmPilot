@@ -2,14 +2,26 @@
 # Uses an official ROCm PyTorch base instead of nvidia/cuda.
 # On ROCm, PyTorch still exposes GPUs through the torch.cuda namespace — that is
 # expected. What matters is that this image carries NO NVIDIA assumptions.
-FROM rocm/pytorch:latest
+#
+# Pin BASE_IMAGE to a specific rocm/pytorch tag for reproducible builds:
+#   docker build --build-arg BASE_IMAGE=rocm/pytorch:<pinned-tag> ...
+ARG BASE_IMAGE=rocm/pytorch:latest
+FROM ${BASE_IMAGE}
 
 WORKDIR /app
 
-# Project dependencies. Remove any CUDA-only wheels (e.g. +cu121, cudatoolkit);
-# the ROCm PyTorch base already ships a HIP-enabled torch build.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt || true
+# Project dependencies, minus NVIDIA-only packages. The ROCm base already ships
+# a HIP-enabled torch build — installing torch/CUDA wheels from requirements.txt
+# would clobber it, so torch* pins and CUDA-only libs are filtered out.
+# (The [t] glob keeps COPY from failing when the repo has no requirements.txt.)
+COPY requirements.tx[t] ./
+RUN if [ -f requirements.txt ]; then \
+      grep -viE '^(torch|torchvision|torchaudio)([=<>~! ]|$)|\+cu[0-9]+|cudatoolkit|cupy-cuda|^(nvidia-)?apex([=<>~! ]|$)|bitsandbytes|flash[-_]attn|nvidia-' \
+        requirements.txt > requirements.rocm.txt || true; \
+      pip install --no-cache-dir -r requirements.rocm.txt; \
+    else \
+      echo "no requirements.txt — skipping dependency install"; \
+    fi
 
 COPY . .
 
@@ -21,3 +33,5 @@ CMD ["python", "smoke_test.py"]
 #   --device=/dev/kfd --device=/dev/dri \
 #   --group-add video --security-opt seccomp=unconfined \
 #   <image>
+#
+# Select specific GPUs with HIP_VISIBLE_DEVICES (not CUDA_VISIBLE_DEVICES).
