@@ -3,6 +3,40 @@
 *(From Jithendra, 2026-07-10. All [J] tasks through Phase 3 are done, verified
 in-browser, and committed — small commits, one thing each, per your rules.)*
 
+---
+
+## ⬆️ Update from Youssef (2026-07-10, later) — most of the [Y] list has landed
+
+Merged to `dev` + `main` since Jithendra's note below (PRs #1–#10, all tested):
+
+- **Phase 1:** ✅ `clone_repo` hardened (allowlist/SSRF guard/token redaction) ·
+  ✅ scoring **locked & made honest** — see decision below · scanner catalogue:
+  Jith added 6 patterns; dedupe/docs-downweight/HIPIFY polish still open (items 7–8).
+- **Phase 2:** ✅ Migration Planner prompt tuned + JSON-validity hardened ·
+  ✅ Patch Explainer **wired to real snippets** (your item 5 — render away).
+- **Phase 3:** ✅ patch transforms now cover `.cuda()` + `.to("cuda")` ·
+  ✅ **Failure Diagnoser wired** + new `VALIDATION_MODE=replay_fail` (your item 6 —
+  the failure panel now gets `validation.diagnosis`) · ✅ encoding bug fixed
+  (item 2/3). ⏳ `live` validation still a stub.
+- **Bonus — multi-agent:** ✅ code-first **Orchestrator + Critic** with an agent
+  activity `trace` on `POST /plan` (`{plan, critique, trace}`) — render the timeline.
+
+**Scoring decision (your call, made):** scoring is optimized for **honesty**, not
+demo drama. ROCm maps `cuda` transparently, so clean repos (nanoGPT ~67) genuinely
+score high; only real blockers (custom kernels, NVIDIA base image, `+cuXXX` wheels)
+tank it (detectron2 ~12). The **demo leads with the bundled sample (37 → 72 → 86)**;
+real repos are honest proof, not forced low. Full spectrum + tier list in
+`docs/BENCHMARK_REPOS.md`.
+
+**Still on my plate:** `live` validation · Report Writer prompt (P4) · scanner
+polish (dedupe dup rows, downweight `.md` findings, HIPIFY vocab) · include
+`readiness_report.md` in `artifacts.zip` (item 4) · `GET /api/runs/{id}` (item 3 —
+let's pair) · real AMD Dev Cloud log · demo (P5).
+
+The rest of this doc is Jithendra's original note (statuses above supersede it).
+
+---
+
 ## Where we are
 
 Every screen except Report is real now: Intake → Scan (findings table with
