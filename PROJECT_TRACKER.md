@@ -77,19 +77,19 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 3 — Patch + Validate
+## Phase 3 — Patch + Validate  🟡 (all [J] tasks done + verified; [Y] tasks open)
 **Backend [Y]**
 - [ ] Improve patch transforms (model `.cuda()`, `.to("cuda")` → resolved device)
 - [ ] Implement `live` validation mode (build `Dockerfile.rocm`, run smoke+bench, parse logs)
-- [ ] Wire Failure Diagnoser into the validate path on failure
+- [ ] Wire Failure Diagnoser into the validate path on failure (UI panel is already waiting for it)
 
 **Backend [J] backend**
-- [ ] Refine the three templates so generated artifacts run clean on ROCm
-- [ ] Add `GET /api/runs/{id}/artifacts.zip` (bundle all artifacts for download)
+- [x] Refine the three templates so generated artifacts run clean on ROCm (CUDA-wheel filtering in Dockerfile, parseable PASS/FAIL + `--require-gpu` in smoke test, TFLOPS in benchmark)
+- [x] Add `GET /api/runs/{id}/artifacts.zip` (bundle all artifacts for download)
 
 **Frontend [J]**
-- [ ] **Patch** screen: diff viewer, artifact tabs (Dockerfile/​smoke/​benchmark), download
-- [ ] **Validate** screen: AMD validation card, terminal-style log panel, **clear replay-mode badge**, failure-diagnosis panel
+- [x] **Patch** screen: diff viewer, artifact tabs (Dockerfile/​smoke/​benchmark), download
+- [x] **Validate** screen: AMD validation card, terminal-style log panel, **clear replay-mode badge**, failure-diagnosis panel
 
 **Acceptance:**
 - Patch screen shows a real diff + 4 downloadable artifacts.
