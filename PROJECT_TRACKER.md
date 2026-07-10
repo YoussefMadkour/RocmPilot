@@ -62,14 +62,14 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 2 — Scan + Plan
+## Phase 2 — Scan + Plan  🟡 (all [J] tasks done + verified; [Y] tasks open)
 **Backend [Y]**
 - [ ] Tune Migration Planner prompt against real findings; verify JSON validity
 - [ ] Patch Explainer wired to real snippets
 
 **Frontend [J]**
-- [ ] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary
-- [ ] **Plan** screen: agent summary, prioritized actions, manual-blockers list, agent-activity timeline
+- [x] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary
+- [x] **Plan** screen: agent summary, prioritized actions, manual-blockers list, agent-activity timeline
 
 **Acceptance:**
 - Scan screen renders all findings from a real repo with working severity/category filtering.
