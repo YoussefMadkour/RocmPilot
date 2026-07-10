@@ -135,9 +135,19 @@ class PlanResponse(BaseModel):
     plan: MigrationPlan
 
 
+class PatchExplanation(BaseModel):
+    """A grounded, per-file explanation of what a generated patch changed."""
+    file_path: str
+    line_number: int          # first changed line, for anchoring in the diff viewer
+    original: str             # the exact changed lines, before
+    patched: str              # the exact changed lines, after
+    explanation: str          # why it's safe for AMD/ROCm
+
+
 class PatchResponse(BaseModel):
     run_id: str
     artifacts: list[Artifact]
+    explanations: list[PatchExplanation] = []
     score: ScoreBreakdown
 
 

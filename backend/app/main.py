@@ -143,14 +143,15 @@ def patch_run(run_id: str) -> PatchResponse:
     if "findings" not in state:
         raise HTTPException(status_code=409, detail="Run must be scanned before patching")
 
-    artifacts = patch_service.generate(run_id)
+    artifacts, explanations = patch_service.generate(run_id)
     score = _score_from_state(state)  # after_planned already computed at scan time
     run_store.update_state(
         run_id,
         stage=RunStage.patched.value,
         artifacts=[a.model_dump(mode="json") for a in artifacts],
+        patch_explanations=[e.model_dump(mode="json") for e in explanations],
     )
-    return PatchResponse(run_id=run_id, artifacts=artifacts, score=score)
+    return PatchResponse(run_id=run_id, artifacts=artifacts, explanations=explanations, score=score)
 
 
 # --------------------------------------------------------------------------- #
