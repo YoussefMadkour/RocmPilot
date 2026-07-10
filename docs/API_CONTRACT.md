@@ -13,7 +13,7 @@ status; the frontend client throws that message.
 ```
 POST /api/runs                 -> create a run (sample or repo URL)
 POST /api/runs/{id}/scan       -> deterministic scan + before/after score
-POST /api/runs/{id}/plan       -> Fireworks migration plan
+POST /api/runs/{id}/plan       -> orchestrated plan (Planner + Critic) + agent trace
 POST /api/runs/{id}/patch      -> generate patch.diff + ROCm artifacts
 POST /api/runs/{id}/validate   -> AMD validation (replay or live) + final score
 GET  /api/runs/{id}/report     -> final Markdown readiness report
@@ -43,6 +43,23 @@ Steps are ordered: `plan`/`patch` require a prior `scan`; `report` requires
 ```
 `severity`: low | medium | high | critical.
 `action_type`: auto_patch | suggested_patch | manual_review | info.
+
+**Plan response** — `POST /plan` returns `{run_id, plan, critique, trace}`. The plan
+is produced by an Orchestrator that runs the Planner then a Critic (which reviews
+the plan against the raw findings); `trace` drives the Plan screen's agent-activity
+timeline.
+```json
+{
+  "plan": { "summary": "...", "actions": [ ... ], "manual_blockers": [ ... ] },
+  "critique": { "approved": true, "issues": [], "notes": "LLM + deterministic review." },
+  "trace": [
+    { "agent": "orchestrator", "message": "Coordinating migration plan ...", "ok": true },
+    { "agent": "planner", "message": "Drafted 5 actions ...", "ok": true },
+    { "agent": "critic", "message": "Reviewed the plan — approved ...", "ok": true }
+  ]
+}
+```
+`agent`: orchestrator | planner | critic. `ok: false` marks a step that flagged a problem.
 
 **ValidationResult** — the AMD validation card.
 ```json

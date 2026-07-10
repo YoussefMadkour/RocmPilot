@@ -93,6 +93,20 @@ class MigrationPlan(BaseModel):
     manual_blockers: list[str] = []
 
 
+class Critique(BaseModel):
+    """The Critic agent's review of a migration plan against the raw findings."""
+    approved: bool
+    issues: list[str] = []
+    notes: str = ""
+
+
+class AgentEvent(BaseModel):
+    """One step in the multi-agent trace — powers the Plan screen's activity timeline."""
+    agent: str            # "orchestrator" | "planner" | "critic"
+    message: str
+    ok: bool = True       # False = this step flagged a problem
+
+
 class Artifact(BaseModel):
     name: str            # e.g. "Dockerfile.rocm"
     path: str            # relative to the run dir
@@ -133,6 +147,8 @@ class ScanResponse(BaseModel):
 class PlanResponse(BaseModel):
     run_id: str
     plan: MigrationPlan
+    critique: Critique
+    trace: list[AgentEvent] = []
 
 
 class PatchResponse(BaseModel):

@@ -78,12 +78,20 @@ def _fallback(findings: list[Finding]) -> MigrationPlan:
     return MigrationPlan(summary=summary, actions=actions, manual_blockers=blockers)
 
 
-def plan(findings: list[Finding]) -> MigrationPlan:
+def plan(findings: list[Finding], *, revision_notes: list[str] | None = None) -> MigrationPlan:
+    """Produce a migration plan. `revision_notes` (from the Critic) triggers a revised
+    pass that must address the listed issues."""
     findings_json = json.dumps([f.model_dump(mode="json") for f in findings], indent=2)
+    revision = ""
+    if revision_notes:
+        revision = (
+            "\n\nA reviewer flagged these issues with your previous plan — fix ALL of "
+            "them in this revision:\n- " + "\n- ".join(revision_notes)
+        )
     raw = fireworks_service.complete(
         system=prompts.MIGRATION_PLANNER,
         user=(
-            "Scan findings:\n" + findings_json +
+            "Scan findings:\n" + findings_json + revision +
             '\n\nReturn JSON: {"summary": str, "actions": '
             '[{"title","detail","severity","action_type"}], "manual_blockers": [str]}.'
         ),

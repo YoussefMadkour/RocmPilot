@@ -50,6 +50,18 @@ export interface MigrationPlan {
   manual_blockers: string[];
 }
 
+export interface Critique {
+  approved: boolean;
+  issues: string[];
+  notes: string;
+}
+
+export interface AgentEvent {
+  agent: string; // "orchestrator" | "planner" | "critic"
+  message: string;
+  ok: boolean;
+}
+
 export interface Artifact {
   name: string;
   path: string;
@@ -102,7 +114,10 @@ export const api = {
   scan: (id: string) =>
     request<ScanResponse>(`/api/runs/${id}/scan`, { method: "POST" }),
   plan: (id: string) =>
-    request<{ run_id: string; plan: MigrationPlan }>(`/api/runs/${id}/plan`, { method: "POST" }),
+    request<{ run_id: string; plan: MigrationPlan; critique: Critique; trace: AgentEvent[] }>(
+      `/api/runs/${id}/plan`,
+      { method: "POST" },
+    ),
   patch: (id: string) =>
     request<{ run_id: string; artifacts: Artifact[]; score: ScoreBreakdown }>(
       `/api/runs/${id}/patch`,
