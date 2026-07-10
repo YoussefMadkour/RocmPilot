@@ -78,7 +78,7 @@ export interface PatchExplanation {
 
 export interface ValidationResult {
   status: "passed" | "failed" | "not_run";
-  mode: "live" | "replay";
+  mode: "live" | "replay" | "replay_fail";
   rocm_detected: boolean;
   hip_available: boolean;
   pytorch_rocm_build: string | null;
@@ -87,6 +87,7 @@ export interface ValidationResult {
   benchmark_passed: boolean;
   inference_latency_ms: number | null;
   logs: string;
+  diagnosis: string | null;
 }
 
 export interface RunSummary {

@@ -154,11 +154,15 @@ export default function ValidatePage() {
           <h2 className="font-display text-sm font-semibold tracking-wide text-ember">
             Failure diagnosis
           </h2>
-          <p className="mt-2 text-sm text-ink-dim">
-            The validation run failed — check the log below for the first error.
-            The Failure Diagnoser agent's analysis will appear here once it is
-            wired into the validate path.
-          </p>
+          {validation.diagnosis ? (
+            <pre className="mt-2 whitespace-pre-wrap font-mono text-xs leading-relaxed text-ink-dim">
+              {validation.diagnosis}
+            </pre>
+          ) : (
+            <p className="mt-2 text-sm text-ink-dim">
+              The validation run failed — check the log below for the first error.
+            </p>
+          )}
         </section>
       )}
 

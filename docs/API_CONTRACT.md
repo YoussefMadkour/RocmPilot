@@ -80,7 +80,10 @@ timeline.
   "status": "passed", "mode": "replay", "rocm_detected": true, "hip_available": true,
   "pytorch_rocm_build": "2.4.0+rocm6.2", "gpu_name": "AMD Instinct MI300X",
   "smoke_test_passed": true, "benchmark_passed": true,
-  "inference_latency_ms": 12.4, "logs": "..."
+  "inference_latency_ms": 12.4, "logs": "...", "diagnosis": null
 }
 ```
-Always show the `mode` badge — a `replay` run must be labeled "Saved AMD run".
+`mode`: replay | replay_fail | live (set via `VALIDATION_MODE`). Always show the
+`mode` badge — a `replay`/`replay_fail` run must be labeled "Saved AMD run".
+`diagnosis` is the Failure Diagnoser agent's analysis; non-null only when
+`status == "failed"` (render it in the failure panel).

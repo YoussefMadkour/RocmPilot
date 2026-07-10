@@ -115,7 +115,7 @@ class Artifact(BaseModel):
 
 class ValidationResult(BaseModel):
     status: ValidationStatus
-    mode: Literal["live", "replay"]
+    mode: Literal["live", "replay", "replay_fail"]
     rocm_detected: bool = False
     hip_available: bool = False
     pytorch_rocm_build: Optional[str] = None
@@ -124,6 +124,7 @@ class ValidationResult(BaseModel):
     benchmark_passed: bool = False
     inference_latency_ms: Optional[float] = None
     logs: str = ""
+    diagnosis: Optional[str] = None   # Failure Diagnoser output; set only on failure
 
 
 # --------------------------------------------------------------------------- #
