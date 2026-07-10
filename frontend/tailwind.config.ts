@@ -18,6 +18,8 @@ const config: Config = {
         accent: "#ED1C24", // AMD signal red — interactive + brand only
         ember: "#FF8A3D", // in-progress, caution, replay badge
         ready: "#3DDC97", // pass / done
+        crit: "#FB7185", // critical severity (badges only — never interactive)
+        warn: "#FACC15", // medium severity
         ink: "#F2EDEE",
         "ink-dim": "#A89DA2",
       },
