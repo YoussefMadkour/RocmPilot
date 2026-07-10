@@ -97,6 +97,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  listRuns: () => request<RunSummary[]>("/api/runs"),
   createRun: (body: { repo_url?: string; use_sample?: boolean }) =>
     request<RunSummary>("/api/runs", { method: "POST", body: JSON.stringify(body) }),
   scan: (id: string) =>

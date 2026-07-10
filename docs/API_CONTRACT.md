@@ -11,6 +11,7 @@ status; the frontend client throws that message.
 ## Flow
 
 ```
+GET  /api/runs                 -> list all runs, newest first (RunSummary[])
 POST /api/runs                 -> create a run (sample or repo URL)
 POST /api/runs/{id}/scan       -> deterministic scan + before/after score
 POST /api/runs/{id}/plan       -> Fireworks migration plan

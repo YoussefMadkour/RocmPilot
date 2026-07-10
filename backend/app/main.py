@@ -65,6 +65,22 @@ def health() -> dict:
 
 
 # --------------------------------------------------------------------------- #
+# GET /api/runs — list all runs, newest first
+# --------------------------------------------------------------------------- #
+@app.get("/api/runs", response_model=list[RunSummary])
+def list_runs() -> list[RunSummary]:
+    return [
+        RunSummary(
+            run_id=state["run_id"],
+            stage=RunStage(state.get("stage", "created")),
+            source=state.get("source", "unknown"),
+            score=ScoreBreakdown(**state.get("score", {"before": 0})),
+        )
+        for state in run_store.list_runs()
+    ]
+
+
+# --------------------------------------------------------------------------- #
 # POST /api/runs — create a run from a sample or a repo URL
 # --------------------------------------------------------------------------- #
 @app.post("/api/runs", response_model=RunSummary)
