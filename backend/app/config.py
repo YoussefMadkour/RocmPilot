@@ -25,6 +25,10 @@ class Settings(BaseSettings):
 
     github_token: str = ""
 
+    # Guardrails for cloning arbitrary user-supplied repo URLs.
+    clone_timeout_seconds: int = 120
+    max_repo_mb: int = 500
+
     @property
     def fireworks_enabled(self) -> bool:
         return bool(self.fireworks_api_key)
