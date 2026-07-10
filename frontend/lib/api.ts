@@ -56,6 +56,14 @@ export interface Artifact {
   language: string;
 }
 
+export interface PatchExplanation {
+  file_path: string;
+  line_number: number;
+  original: string;
+  patched: string;
+  explanation: string;
+}
+
 export interface ValidationResult {
   status: "passed" | "failed" | "not_run";
   mode: "live" | "replay";
@@ -104,10 +112,12 @@ export const api = {
   plan: (id: string) =>
     request<{ run_id: string; plan: MigrationPlan }>(`/api/runs/${id}/plan`, { method: "POST" }),
   patch: (id: string) =>
-    request<{ run_id: string; artifacts: Artifact[]; score: ScoreBreakdown }>(
-      `/api/runs/${id}/patch`,
-      { method: "POST" },
-    ),
+    request<{
+      run_id: string;
+      artifacts: Artifact[];
+      explanations: PatchExplanation[];
+      score: ScoreBreakdown;
+    }>(`/api/runs/${id}/patch`, { method: "POST" }),
   validate: (id: string) =>
     request<{ run_id: string; validation: ValidationResult; score: ScoreBreakdown }>(
       `/api/runs/${id}/validate`,

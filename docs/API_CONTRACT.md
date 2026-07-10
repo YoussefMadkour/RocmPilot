@@ -44,6 +44,17 @@ Steps are ordered: `plan`/`patch` require a prior `scan`; `report` requires
 `severity`: low | medium | high | critical.
 `action_type`: auto_patch | suggested_patch | manual_review | info.
 
+**PatchExplanation** — a grounded, per-file note in the `POST /patch` response
+(`{run_id, artifacts, explanations, score}`); powers the Patch screen's diff notes.
+```json
+{
+  "file_path": "model.py", "line_number": 42,
+  "original": "device = torch.device(\"cuda\")",
+  "patched": "device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")",
+  "explanation": "In model.py, the hardcoded CUDA device is replaced with an availability-guarded lookup ..."
+}
+```
+
 **ValidationResult** — the AMD validation card.
 ```json
 {

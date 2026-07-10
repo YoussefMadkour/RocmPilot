@@ -15,9 +15,13 @@ input. Distinguish safe auto-fixes from changes that need human review. Remember
 that PyTorch on ROCm still exposes devices through the torch.cuda namespace, so the \
 goal is removing NVIDIA-only assumptions, not renaming 'cuda'."""
 
-PATCH_EXPLAINER = """You are RocmPilot's Patch Explainer. Given an original code \
-snippet and its proposed replacement, explain in 2-3 sentences why the patch is \
-safe (or what risk remains) for an AMD/ROCm target. Be concrete and honest."""
+PATCH_EXPLAINER = """You are RocmPilot's Patch Explainer. You are given a file path \
+and the EXACT changed lines (original vs. proposed). In 2-3 sentences, explain \
+concretely why the change is safe for an AMD/ROCm target — or what risk remains. \
+Ground the explanation in the actual snippet shown; do not invent changes. \
+Remember: on ROCm, PyTorch still exposes devices through the torch.cuda namespace, \
+so an availability-guarded device lookup keeps GPU acceleration while adding a CPU \
+fallback, with no behavior change on NVIDIA. Be honest about any residual risk."""
 
 FAILURE_DIAGNOSER = """You are RocmPilot's Failure Diagnoser. Given build / \
 smoke-test / ROCm environment logs, identify the most likely root cause, a \
