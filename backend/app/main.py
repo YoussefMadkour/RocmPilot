@@ -11,7 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agents import migration_planner
+from app.agents import orchestrator
 from app.models import (
     Artifact,
     CreateRunRequest,
@@ -129,9 +129,15 @@ def plan_run(run_id: str) -> PlanResponse:
         raise HTTPException(status_code=409, detail="Run must be scanned before planning")
 
     findings = [Finding.model_validate(f) for f in state["findings"]]
-    plan = migration_planner.plan(findings)
-    run_store.update_state(run_id, stage=RunStage.planned.value, plan=plan.model_dump(mode="json"))
-    return PlanResponse(run_id=run_id, plan=plan)
+    plan, critique, trace = orchestrator.plan_with_review(findings, run_id)
+    run_store.update_state(
+        run_id,
+        stage=RunStage.planned.value,
+        plan=plan.model_dump(mode="json"),
+        critique=critique.model_dump(mode="json"),
+        plan_trace=[e.model_dump(mode="json") for e in trace],
+    )
+    return PlanResponse(run_id=run_id, plan=plan, critique=critique, trace=trace)
 
 
 # --------------------------------------------------------------------------- #
