@@ -7,5 +7,38 @@
 }
 
 body {
-  @apply bg-neutral-950 text-neutral-100 antialiased;
+  @apply bg-bay text-ink antialiased;
+}
+
+::selection {
+  @apply bg-accent/30;
+}
+
+/* Visible keyboard focus everywhere, in the accent so it reads as "actionable". */
+:focus-visible {
+  outline: 2px solid theme("colors.accent");
+  outline-offset: 2px;
+}
+
+/* The only ambient motion in the app: the in-progress stage LED. */
+@keyframes led-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.led-pulse {
+  animation: led-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .led-pulse {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
