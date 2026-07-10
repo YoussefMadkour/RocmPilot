@@ -36,6 +36,21 @@ def create(source: str) -> str:
     return run_id
 
 
+def list_runs() -> list[dict[str, Any]]:
+    """All run states, newest first (by state.json mtime). Skips corrupt runs."""
+    if not RUNS_DIR.exists():
+        return []
+    states: list[dict[str, Any]] = []
+    for path in sorted(
+        RUNS_DIR.glob("*/state.json"), key=lambda p: p.stat().st_mtime, reverse=True
+    ):
+        try:
+            states.append(json.loads(path.read_text()))
+        except (OSError, json.JSONDecodeError):
+            continue
+    return states
+
+
 def exists(run_id: str) -> bool:
     return _state_path(run_id).exists()
 

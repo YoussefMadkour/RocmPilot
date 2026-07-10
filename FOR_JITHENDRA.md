@@ -1,4 +1,4 @@
-# Hey Jithandra 👋 — start here
+# Hey Jithendra 👋 — start here
 
 Welcome to **RocmPilot Studio**, our AMD hackathon project. I've scaffolded the
 whole thing so you're not staring at an empty repo — it already runs end to end.

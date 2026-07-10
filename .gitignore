@@ -35,3 +35,8 @@ benchmark_repos/
 .idea/
 .vscode/
 *.swp
+
+# --- Claude / Agent tooling ---
+.claude/
+CLAUDE.md
+

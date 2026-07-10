@@ -1,11 +1,11 @@
 # RocmPilot Studio — Project Tracker
 
 Living doc. Check boxes as you go (`- [x]`). Each task is tagged **[Y]** Youssef or
-**[J]** Jithandra. Phase is "done" only when every acceptance criterion passes.
+**[J]** Jithendra. Phase is "done" only when every acceptance criterion passes.
 
 - **Y = Youssef** — senior AI eng. Owns the intelligence: agents, prompts, scanner
   core, scoring, validation, product/demo direction.
-- **J = Jithandra** — owns the frontend cockpit, *and* takes scoped, testable
+- **J = Jithendra** — owns the frontend cockpit, *and* takes scoped, testable
   backend tasks to ramp up (marked **[J] backend**).
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done
@@ -14,7 +14,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 
 ## Split at a glance
 
-| Layer | Youssef | Jithandra |
+| Layer | Youssef | Jithendra |
 |-------|---------|-----------|
 | Frontend | product/UX review | **all 6 screens + design + API client** |
 | Backend – AI (`agents/`) | **all 4 Fireworks agents + prompts** | — |
@@ -24,7 +24,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | Docs & demo | demo script, positioning | setup docs, screenshots |
 
 Why this split: Youssef holds the parts that decide whether the project *feels
-real* (agents, scoring, the ROCm nuance). Jithandra owns the whole visible surface
+real* (agents, scoring, the ROCm nuance). Jithendra owns the whole visible surface
 plus low-risk backend slices (patterns, tests, templates) that are easy to verify
 and teach the codebase without gating the AI path.
 
@@ -40,21 +40,21 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 1 — Core loop solid
+## Phase 1 — Core loop solid  🟡 (all [J] tasks done + verified; [Y] tasks open)
 **Backend [Y]**
 - [ ] Harden `repo_service.clone_repo` (URL validation, size/time limits, private via `GITHUB_TOKEN`)
 - [ ] Expand scanner pattern catalogue; unit-test each category
 - [ ] Lock scoring weights against 3 real repos (nanoGPT, YOLOv5, Real-ESRGAN)
 
 **Backend [J] backend** (ramp-up tasks)
-- [ ] Add ≥5 new patterns to `scanner_service.PATTERNS` (e.g. `pin_memory`, `torch.backends.cudnn`, `apex`, `bitsandbytes`, `flash-attn`) with a test each
-- [ ] Write `backend/tests/test_scanner.py` + `test_scoring.py` (pytest)
-- [ ] Add `GET /api/runs` (list runs) endpoint
+- [x] Add ≥5 new patterns to `scanner_service.PATTERNS` (added 6: `pin_memory`, `torch.backends.cudnn`, `torch.backends.cuda`/TF32, `apex`, `bitsandbytes`, `flash-attn`) with a test each
+- [x] Write `backend/tests/test_scanner.py` + `test_scoring.py` (pytest — 29 passing)
+- [x] Add `GET /api/runs` (list runs) endpoint
 
 **Frontend [J]**
-- [ ] Run the **frontend-design** skill; commit a design direction note
-- [ ] App shell + nav (Intake → Scan → Plan → Patch → Validate → Report)
-- [ ] **Intake** screen: repo URL input, "use sample" button, create run
+- [x] Run the **frontend-design** skill; commit a design direction note (`frontend/DESIGN.md`)
+- [x] App shell + nav (Intake → Scan → Plan → Patch → Validate → Report)
+- [x] **Intake** screen: repo URL input, "use sample" button, create run
 
 **Acceptance:**
 - Scanner has ≥15 patterns, all covered by a passing `pytest`.
@@ -62,14 +62,14 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 2 — Scan + Plan
+## Phase 2 — Scan + Plan  🟡 (all [J] tasks done + verified; [Y] tasks open)
 **Backend [Y]**
 - [ ] Tune Migration Planner prompt against real findings; verify JSON validity
 - [ ] Patch Explainer wired to real snippets
 
 **Frontend [J]**
-- [ ] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary
-- [ ] **Plan** screen: agent summary, prioritized actions, manual-blockers list, agent-activity timeline
+- [x] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary
+- [x] **Plan** screen: agent summary, prioritized actions, manual-blockers list, agent-activity timeline
 
 **Acceptance:**
 - Scan screen renders all findings from a real repo with working severity/category filtering.
@@ -77,19 +77,19 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 3 — Patch + Validate
+## Phase 3 — Patch + Validate  🟡 (all [J] tasks done + verified; [Y] tasks open)
 **Backend [Y]**
 - [ ] Improve patch transforms (model `.cuda()`, `.to("cuda")` → resolved device)
 - [ ] Implement `live` validation mode (build `Dockerfile.rocm`, run smoke+bench, parse logs)
-- [ ] Wire Failure Diagnoser into the validate path on failure
+- [ ] Wire Failure Diagnoser into the validate path on failure (UI panel is already waiting for it)
 
 **Backend [J] backend**
-- [ ] Refine the three templates so generated artifacts run clean on ROCm
-- [ ] Add `GET /api/runs/{id}/artifacts.zip` (bundle all artifacts for download)
+- [x] Refine the three templates so generated artifacts run clean on ROCm (CUDA-wheel filtering in Dockerfile, parseable PASS/FAIL + `--require-gpu` in smoke test, TFLOPS in benchmark)
+- [x] Add `GET /api/runs/{id}/artifacts.zip` (bundle all artifacts for download)
 
 **Frontend [J]**
-- [ ] **Patch** screen: diff viewer, artifact tabs (Dockerfile/​smoke/​benchmark), download
-- [ ] **Validate** screen: AMD validation card, terminal-style log panel, **clear replay-mode badge**, failure-diagnosis panel
+- [x] **Patch** screen: diff viewer, artifact tabs (Dockerfile/​smoke/​benchmark), download
+- [x] **Validate** screen: AMD validation card, terminal-style log panel, **clear replay-mode badge**, failure-diagnosis panel
 
 **Acceptance:**
 - Patch screen shows a real diff + 4 downloadable artifacts.

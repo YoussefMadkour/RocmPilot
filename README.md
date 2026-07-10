@@ -86,17 +86,28 @@ npm run dev                             # http://localhost:3000
 
 ```
 backend/    FastAPI app — services/ (deterministic) + agents/ (Fireworks)
+backend/tests/       pytest suite (scanner, scoring, run store, artifacts.zip)
 frontend/   Next.js cockpit UI + typed API client (lib/api.ts)
+frontend/DESIGN.md   design direction ("engine-bay cockpit") — keep screens consistent
 docs/       ARCHITECTURE, API_CONTRACT, DEMO_SCRIPT
 PROJECT_TRACKER.md   phases, acceptance criteria, who-owns-what
-FOR_JITHANDRA.md     onboarding for the frontend/backend split
+FOR_JITHENDRA.md     onboarding for the frontend/backend split
+FOR_YOUSSEF.md       status handoff + open [Y] work + improvement ideas
+```
+
+## Tests
+
+```bash
+cd backend
+source .venv/bin/activate     # Windows: .venv\Scripts\activate
+pytest                        # 32 tests, all deterministic (no network, no LLM)
 ```
 
 ## Team
 
 - **Youssef** — backend intelligence: scanner, scoring, Fireworks agents, prompts,
   validation, product/demo direction.
-- **Jithandra** — frontend cockpit (Next.js + design), plus scoped backend work to
+- **Jithendra** — frontend cockpit (Next.js + design), plus scoped backend work to
   ramp up. See `PROJECT_TRACKER.md`.
 
 ## Limitations & roadmap

@@ -98,6 +98,35 @@ PATTERNS: list[Pattern] = [
        "Pinned CUDA-specific PyTorch wheel (e.g. +cu121).",
        "Install from the ROCm PyTorch index instead of the CUDA index."),
 
+    # ---- CUDA-tuned runtime flags ----
+    _p(r'pin_memory\s*=\s*True', FindingCategory.cuda_hardcoding, Severity.low,
+       ActionType.info,
+       "DataLoader pins host memory (a CUDA-first optimization).",
+       "Works on ROCm via HIP pinned memory; verify it helps rather than hurts on AMD."),
+    _p(r'torch\.backends\.cudnn', FindingCategory.cuda_hardcoding, Severity.low,
+       ActionType.suggested_patch,
+       "Tunes cuDNN-specific backend flags.",
+       "On ROCm these map to MIOpen; verify flags like benchmark/deterministic behave as expected."),
+    _p(r'torch\.backends\.cuda\b', FindingCategory.cuda_hardcoding, Severity.low,
+       ActionType.suggested_patch,
+       "Sets CUDA backend flags (e.g. TF32 matmul) that are NVIDIA-hardware specific.",
+       "TF32 does not exist on AMD; guard the flag or drop it on ROCm hosts."),
+
+    # ---- CUDA-only libraries ----
+    _p(r'\b(?:from|import)\s+apex\b|^\s*(?:nvidia-)?apex(?:[=<>!~\[\s]|$)',
+       FindingCategory.cuda_dependency, Severity.high,
+       ActionType.manual_review,
+       "NVIDIA Apex is CUDA-only.",
+       "Migrate to native torch.cuda.amp / torch.distributed (Apex features are upstreamed)."),
+    _p(r'bitsandbytes', FindingCategory.cuda_dependency, Severity.high,
+       ActionType.manual_review,
+       "bitsandbytes ships CUDA-only quantization kernels by default.",
+       "Use a ROCm-enabled bitsandbytes build, or disable quantization on AMD."),
+    _p(r'flash[-_]attn', FindingCategory.cuda_dependency, Severity.high,
+       ActionType.manual_review,
+       "flash-attn wheels are built against CUDA.",
+       "Use the ROCm flash-attention fork or fall back to PyTorch scaled_dot_product_attention."),
+
     # ---- Manual blockers ----
     _p(r'\.cu[h]?["\'\s)]', FindingCategory.manual_blocker, Severity.critical,
        ActionType.manual_review,

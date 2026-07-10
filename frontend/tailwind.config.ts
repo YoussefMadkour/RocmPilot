@@ -1,8 +1,7 @@
 import type { Config } from "tailwindcss";
 
-// Starter theme. Jithandra: run the frontend-design skill before expanding this —
-// pick an intentional palette (this is a developer "cockpit", lean dark + one
-// AMD-adjacent accent) rather than default Tailwind grays.
+// Theme tokens come from frontend/DESIGN.md ("engine-bay cockpit").
+// Don't add colors ad hoc — extend the doc first.
 const config: Config = {
   darkMode: "class",
   content: [
@@ -13,8 +12,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Placeholder accent — replace with a deliberate choice.
-        accent: "#ed1c24",
+        bay: "#141014", // page background — red-warmed dark, not neutral gray
+        panel: "#1C1519", // cards, rail
+        edge: "#2B2026", // borders, dividers
+        accent: "#ED1C24", // AMD signal red — interactive + brand only
+        ember: "#FF8A3D", // in-progress, caution, replay badge
+        ready: "#3DDC97", // pass / done
+        crit: "#FB7185", // critical severity (badges only — never interactive)
+        warn: "#FACC15", // medium severity
+        ink: "#F2EDEE",
+        "ink-dim": "#A89DA2",
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "sans-serif"],
+        sans: ["var(--font-body)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
       },
     },
   },

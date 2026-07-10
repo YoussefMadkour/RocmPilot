@@ -1,6 +1,6 @@
 """Render the AMD/ROCm smoke test from a template.
 
-OWNER: Jithandra (template) + Youssef (wiring).
+OWNER: Jithendra (template) + Youssef (wiring).
 """
 from __future__ import annotations
 
