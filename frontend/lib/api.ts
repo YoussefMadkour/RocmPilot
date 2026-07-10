@@ -122,4 +122,6 @@ export const api = {
     request<{ run_id: string; name: string; content: string }>(
       `/api/runs/${id}/artifacts/${name}`,
     ),
+  // Browser-navigable download URL (binary zip — not a JSON request).
+  artifactsZipUrl: (id: string) => `${BASE_URL}/api/runs/${id}/artifacts.zip`,
 };

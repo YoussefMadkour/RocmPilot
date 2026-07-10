@@ -8,8 +8,12 @@ call the steps independently. See docs/API_CONTRACT.md for the wire contract.
 """
 from __future__ import annotations
 
+import io
+import zipfile
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
 from app.agents import migration_planner
 from app.models import (
@@ -217,6 +221,29 @@ def get_report(run_id: str) -> ReportResponse:
 def get_artifacts(run_id: str) -> dict:
     state = _require_run(run_id)
     return {"run_id": run_id, "artifacts": state.get("artifacts", [])}
+
+
+@app.get("/api/runs/{run_id}/artifacts.zip")
+def get_artifacts_zip(run_id: str) -> Response:
+    """Bundle every generated artifact into one downloadable zip."""
+    state = _require_run(run_id)
+    artifacts = state.get("artifacts", [])
+    if not artifacts:
+        raise HTTPException(status_code=409, detail="No artifacts yet; run the patch step first")
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for a in artifacts:
+            content = run_store.read_artifact(run_id, a["name"])
+            if content is not None:
+                zf.writestr(a["name"], content)
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="rocmpilot_{run_id}_artifacts.zip"'
+        },
+    )
 
 
 @app.get("/api/runs/{run_id}/artifacts/{name}")

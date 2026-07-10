@@ -20,6 +20,7 @@ POST /api/runs/{id}/validate   -> AMD validation (replay or live) + final score
 GET  /api/runs/{id}/report     -> final Markdown readiness report
 GET  /api/runs/{id}/artifacts  -> list generated artifacts
 GET  /api/runs/{id}/artifacts/{name} -> one artifact's content
+GET  /api/runs/{id}/artifacts.zip -> all artifacts as a zip download (409 before patch)
 GET  /api/health               -> {"status":"ok"}
 ```
 
