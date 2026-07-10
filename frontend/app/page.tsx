@@ -1,81 +1,133 @@
 "use client";
 
-// STARTER vertical slice — proves the frontend talks to the backend end to end.
-// Jithandra: this is your seed. Run the frontend-design skill, then split this
-// into the six cockpit screens (Intake / Scan / Plan / Patch / Validate / Report)
-// described in docs/API_CONTRACT.md and PROJECT_TRACKER.md.
+// 01 · Intake — point the cockpit at a repo and start a run.
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api, type Finding, type ScoreBreakdown } from "@/lib/api";
+import { api } from "@/lib/api";
+import { CockpitRail } from "@/components/cockpit-rail";
 
-export default function Home() {
-  const [runId, setRunId] = useState<string | null>(null);
-  const [score, setScore] = useState<ScoreBreakdown | null>(null);
-  const [findings, setFindings] = useState<Finding[]>([]);
-  const [busy, setBusy] = useState(false);
+// Verified CUDA-first showcase repos from PROJECT_TRACKER.md.
+const SUGGESTED = [
+  "https://github.com/karpathy/nanoGPT",
+  "https://github.com/ultralytics/yolov5",
+  "https://github.com/xinntao/Real-ESRGAN",
+  "https://github.com/openai/whisper",
+];
+
+export default function IntakePage() {
+  const router = useRouter();
+  const [repoUrl, setRepoUrl] = useState("");
+  const [busy, setBusy] = useState<"repo" | "sample" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function runDemo() {
-    setBusy(true);
+  async function start(body: { repo_url?: string; use_sample?: boolean }) {
+    setBusy(body.use_sample ? "sample" : "repo");
     setError(null);
     try {
-      const run = await api.createRun({ use_sample: true });
-      setRunId(run.run_id);
-      const scan = await api.scan(run.run_id);
-      setScore(scan.score);
-      setFindings(scan.findings);
+      const run = await api.createRun(body);
+      router.push(`/runs/${run.run_id}/scan`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setBusy(false);
+      setError(e instanceof Error ? e.message : "Could not create the run");
+      setBusy(null);
     }
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-semibold">RocmPilot Studio</h1>
-      <p className="mt-2 text-neutral-400">
-        AI migration &amp; validation cockpit for AMD GPU readiness.
-      </p>
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row">
+      <CockpitRail />
+      <main className="min-w-0 flex-1">
+        <p className="font-mono text-[11px] tracking-widest text-ink-dim">
+          AMD ROCm · MIGRATION COCKPIT
+        </p>
+        <h1 className="mt-2 font-display text-4xl font-bold leading-tight">
+          CUDA-first in.
+          <br />
+          <span className="text-accent">AMD-ready</span> out.
+        </h1>
+        <p className="mt-4 max-w-xl text-ink-dim">
+          Scan a PyTorch repo for CUDA and NVIDIA blockers, generate safe
+          patches and a ROCm container, validate on AMD, and get a readiness
+          score you can act on.
+        </p>
 
-      <button
-        onClick={runDemo}
-        disabled={busy}
-        className="mt-8 rounded-lg bg-accent px-4 py-2 font-medium text-white disabled:opacity-50"
-      >
-        {busy ? "Scanning…" : "Scan sample CUDA-first repo"}
-      </button>
-
-      {error && <p className="mt-4 text-red-400">{error}</p>}
-
-      {score && (
-        <div className="mt-8 rounded-xl border border-neutral-800 p-5">
-          <p className="text-sm text-neutral-400">Run {runId}</p>
-          <p className="mt-1 text-2xl font-semibold">
-            ROCm Readiness (before): {score.before}/100
-          </p>
-          <p className="text-neutral-400">
-            Projected after patches: {score.after_planned}/100
-          </p>
-        </div>
-      )}
-
-      {findings.length > 0 && (
-        <ul className="mt-6 space-y-2">
-          {findings.map((f, i) => (
-            <li
-              key={i}
-              className="rounded-lg border border-neutral-800 px-4 py-3 text-sm"
+        <section className="mt-8 max-w-xl rounded-xl border border-edge bg-panel p-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (repoUrl.trim()) start({ repo_url: repoUrl.trim() });
+            }}
+          >
+            <label
+              htmlFor="repo-url"
+              className="block text-sm font-medium text-ink"
             >
-              <span className="font-mono text-accent">[{f.severity}]</span>{" "}
-              <span className="font-mono text-neutral-300">
-                {f.file_path}:{f.line_number}
-              </span>
-              <div className="text-neutral-400">{f.explanation}</div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+              GitHub repository URL
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                id="repo-url"
+                type="url"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="https://github.com/karpathy/nanoGPT"
+                className="min-w-0 flex-1 rounded-lg border border-edge bg-bay px-3 py-2 font-mono text-sm placeholder:text-ink-dim/50"
+                disabled={busy !== null}
+              />
+              <button
+                type="submit"
+                disabled={busy !== null || !repoUrl.trim()}
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:brightness-110 disabled:opacity-40"
+              >
+                {busy === "repo" ? "Cloning…" : "Start run"}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {SUGGESTED.map((url) => (
+              <button
+                key={url}
+                type="button"
+                onClick={() => setRepoUrl(url)}
+                disabled={busy !== null}
+                className="rounded-full border border-edge px-2.5 py-1 font-mono text-[11px] text-ink-dim hover:border-ink-dim hover:text-ink"
+              >
+                {url.replace("https://github.com/", "")}
+              </button>
+            ))}
+          </div>
+
+          <div className="my-5 flex items-center gap-3 text-[11px] text-ink-dim">
+            <span className="h-px flex-1 bg-edge" aria-hidden />
+            or
+            <span className="h-px flex-1 bg-edge" aria-hidden />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => start({ use_sample: true })}
+            disabled={busy !== null}
+            className="w-full rounded-lg border border-edge px-4 py-2 text-sm font-medium text-ink hover:border-ink-dim disabled:opacity-40"
+          >
+            {busy === "sample"
+              ? "Loading sample…"
+              : "Scan the bundled CUDA-first sample repo"}
+          </button>
+
+          {error && (
+            <p role="alert" className="mt-4 text-sm text-ember">
+              {error} — check that the backend is running on :8000, then try
+              again.
+            </p>
+          )}
+        </section>
+
+        <p className="mt-6 font-mono text-[11px] text-ink-dim">
+          Deterministic scanner · Fireworks agents optional · AMD validation
+          replay-safe
+        </p>
+      </main>
+    </div>
   );
 }
