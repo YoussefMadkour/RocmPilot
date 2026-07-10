@@ -32,6 +32,44 @@ def test_changed_lines_empty_when_no_rewrite():
 
 
 # --------------------------------------------------------------------------- #
+# _rewrite_python — the device transforms
+# --------------------------------------------------------------------------- #
+GUARD = 'torch.cuda.is_available()'
+
+
+@pytest.mark.parametrize("src", [
+    'model = model.cuda()',
+    "x = x.to('cuda')",
+    'x = x.to("cuda")',
+    'dev = torch.device("cuda")',
+])
+def test_rewrites_guard_unambiguous_cuda_forms(src):
+    out = patch_service._rewrite_python(src)
+    assert GUARD in out
+    assert out != src
+
+
+def test_cuda_call_becomes_to():
+    assert patch_service._rewrite_python("model.cuda()") == f'model.to({patch_service._GUARD})'
+
+
+@pytest.mark.parametrize("src", [
+    'if torch.cuda.is_available():',   # capability check, not a device move
+    'torch.cuda.set_device(0)',        # not a .cuda() call
+    'x = x.cuda(0)',                   # explicit ordinal — left for a human
+    'name = "cuda"',                   # bare string, too ambiguous to touch
+])
+def test_rewrites_leave_ambiguous_forms_alone(src):
+    assert patch_service._rewrite_python(src) == src
+
+
+def test_rewrites_are_idempotent():
+    src = 'a = model.cuda()\nb = t.to("cuda")\nc = torch.device("cuda")\n'
+    once = patch_service._rewrite_python(src)
+    assert patch_service._rewrite_python(once) == once  # second pass changes nothing
+
+
+# --------------------------------------------------------------------------- #
 # patch_explainer — grounded, file-aware
 # --------------------------------------------------------------------------- #
 def test_explainer_uses_llm_when_available(monkeypatch):

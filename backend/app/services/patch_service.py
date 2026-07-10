@@ -27,10 +27,18 @@ from app.services import (
 # Cap how many patches we ask the explainer about, to bound LLM calls per run.
 MAX_EXPLANATIONS = 12
 
-# Safe, mechanical rewrites for Python device handling.
+# Safe, mechanical rewrites for Python device handling. All are in-place line
+# substitutions (line counts stay aligned, so _changed_lines can zip them) and
+# each is idempotent — the guarded replacement no longer matches its own pattern.
+# We deliberately only touch the *unambiguous* forms:
+#   torch.device("cuda")  -> guarded lookup
+#   x.to("cuda")          -> guarded lookup   (bare literal only)
+#   x.cuda()              -> x.to(guarded)     (no-arg only; .cuda(0) left alone)
+_GUARD = '"cuda" if torch.cuda.is_available() else "cpu"'
 _REWRITES = [
-    (re.compile(r'torch\.device\(\s*["\']cuda["\']\s*\)'),
-     'torch.device("cuda" if torch.cuda.is_available() else "cpu")'),
+    (re.compile(r'torch\.device\(\s*["\']cuda["\']\s*\)'), f'torch.device({_GUARD})'),
+    (re.compile(r'\.to\(\s*["\']cuda["\']\s*\)'), f'.to({_GUARD})'),
+    (re.compile(r'\.cuda\(\s*\)'), f'.to({_GUARD})'),
 ]
 
 
