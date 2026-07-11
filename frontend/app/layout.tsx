@@ -33,6 +33,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`dark ${display.variable} ${body.variable} ${mono.variable}`}
+      // Browser extensions (e.g. data-jetski-tab-id) mutate <html> attributes
+      // before React hydrates, causing a false-positive hydration warning.
+      // Our own attributes here are static, so suppressing is safe and scoped
+      // to this element only.
+      suppressHydrationWarning
     >
       <body className="font-sans">
         <header className="border-b border-edge">
