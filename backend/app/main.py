@@ -40,6 +40,7 @@ from app.models import (
     ValidationResult,
 )
 from app.services import (
+    notebook_service,
     patch_service,
     repo_service,
     report_service,
@@ -397,6 +398,23 @@ def get_patched_repo(run_id: str) -> Response:
         media_type="application/zip",
         headers={
             "Content-Disposition": f'attachment; filename="rocmpilot_{run_id}_patched_repo.zip"'
+        },
+    )
+
+
+@app.get("/api/runs/{run_id}/run_on_amd.ipynb")
+def get_run_notebook(run_id: str) -> Response:
+    """A self-contained notebook that clones the repo, applies this run's exact
+    patch.diff, and runs the model on AMD — the 'run it on AMD' proof for the demo."""
+    state = _require_run(run_id)
+    if "artifacts" not in state:
+        raise HTTPException(status_code=409, detail="Generate patches first (run the patch step)")
+    nb = notebook_service.run_on_amd_notebook(run_id)
+    return Response(
+        content=nb,
+        media_type="application/x-ipynb+json",
+        headers={
+            "Content-Disposition": f'attachment; filename="run_on_amd_{run_id}.ipynb"'
         },
     )
 

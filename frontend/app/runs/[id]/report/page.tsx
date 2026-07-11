@@ -110,6 +110,13 @@ export default function ReportPage() {
               Download patched repo (.zip)
             </a>
             <a
+              href={api.runOnAmdNotebookUrl(id)}
+              className="rounded-lg border border-edge px-4 py-2 text-sm font-medium hover:border-ink-dim"
+              title="A notebook that clones the repo, applies this run's patch, and runs it on AMD"
+            >
+              Run-on-AMD notebook (.ipynb)
+            </a>
+            <a
               href={api.artifactsZipUrl(id)}
               className="rounded-lg border border-edge px-4 py-2 text-sm font-medium hover:border-ink-dim"
             >

@@ -174,6 +174,7 @@ export const api = {
   // Browser-navigable download URLs (binary zips — not JSON requests).
   artifactsZipUrl: (id: string) => `${BASE_URL}/api/runs/${id}/artifacts.zip`,
   patchedRepoZipUrl: (id: string) => `${BASE_URL}/api/runs/${id}/patched_repo.zip`,
+  runOnAmdNotebookUrl: (id: string) => `${BASE_URL}/api/runs/${id}/run_on_amd.ipynb`,
   // SSE endpoints for live progress (consume with EventSource).
   planStreamUrl: (id: string) => `${BASE_URL}/api/runs/${id}/plan/stream`,
   patchStreamUrl: (id: string) => `${BASE_URL}/api/runs/${id}/patch/stream`,
