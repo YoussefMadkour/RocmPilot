@@ -138,6 +138,66 @@ PATTERNS: list[Pattern] = [
        "Builds a custom native CUDA extension.",
        "HIPIFY the kernels (hipify-perl) and rebuild the extension against ROCm/HIP "
        "(torch.utils.cpp_extension supports HIP) — flag for a human."),
+
+    # ---- Kernel-level hazards: the hard 20% hipify can't safely handle ----
+    # Warp/wavefront divergence — NVIDIA warps are 32 lanes, AMD wavefronts are 64.
+    _p(r'__shfl(_(up|down|xor))?(_sync)?\b', FindingCategory.manual_blocker, Severity.critical,
+       ActionType.manual_review,
+       "Warp shuffle intrinsic — assumes 32-lane warps.",
+       "AMD wavefronts are 64 wide; shuffle/reduction logic must be re-derived for "
+       "wavefront64 (hipify does not fix this). Manual review."),
+    _p(r'__ballot(_sync)?\b|__activemask\b|__any_sync\b|__all_sync\b',
+       FindingCategory.manual_blocker, Severity.critical, ActionType.manual_review,
+       "Warp vote/ballot intrinsic — 32-bit lane mask on NVIDIA.",
+       "AMD wavefront masks are 64-bit; ported vote/ballot logic must widen masks. "
+       "Manual review."),
+    _p(r'__syncwarp\b|\bwarpSize\b', FindingCategory.manual_blocker, Severity.high,
+       ActionType.manual_review,
+       "Warp-size / warp-sync assumption.",
+       "warpSize is 64 on AMD (32 on NVIDIA); code hardcoding 32 for warp size breaks. "
+       "Review wavefront64 semantics."),
+    _p(r'cooperative_groups|namespace\s+cg\b', FindingCategory.manual_blocker, Severity.high,
+       ActionType.manual_review,
+       "Cooperative Groups API.",
+       "Cooperative Groups support on ROCm is partial; grid/multi-block sync may need "
+       "rework. Manual review."),
+    _p(r'nvcuda::wmma|wmma::|\bmma_sync\b', FindingCategory.manual_blocker, Severity.high,
+       ActionType.manual_review,
+       "WMMA tensor-core API — NVIDIA-specific.",
+       "Use rocWMMA or MFMA intrinsics on CDNA (MI2xx/MI3xx); the wmma API does not "
+       "port directly. Manual review."),
+    _p(r'cudaTextureObject_t|texture\s*<', FindingCategory.manual_blocker, Severity.high,
+       ActionType.manual_review,
+       "CUDA texture-memory API.",
+       "Texture/image objects differ on ROCm (HIP texture API); verify addressing/"
+       "filtering semantics. Manual review."),
+    _p(r'\bcutlass\b|cutlass::', FindingCategory.manual_blocker, Severity.critical,
+       ActionType.manual_review,
+       "CUTLASS — NVIDIA GEMM template library.",
+       "No drop-in ROCm equivalent; port to Composable Kernel (CK) or hipBLASLt. "
+       "Manual review."),
+
+    # ---- CUDA math/comm libraries -> ROCm equivalents (mostly mechanical) ----
+    _p(r'cublas[A-Z]|cublas\.h|-lcublas|libcublas', FindingCategory.cuda_dependency,
+       Severity.high, ActionType.suggested_patch,
+       "Uses cuBLAS (NVIDIA BLAS).", "Swap to hipBLAS / rocBLAS on ROCm."),
+    # cuDNN C API only — NOT torch.backends.cudnn (a PyTorch flag, handled elsewhere).
+    _p(r'cudnn[A-Z]|cudnn\.h|-lcudnn|libcudnn', FindingCategory.cuda_dependency,
+       Severity.high, ActionType.suggested_patch,
+       "Uses cuDNN (NVIDIA DNN primitives).", "Swap to MIOpen on ROCm."),
+    _p(r'\bcufft', FindingCategory.cuda_dependency, Severity.high, ActionType.suggested_patch,
+       "Uses cuFFT.", "Swap to hipFFT / rocFFT on ROCm."),
+    _p(r'\bcusparse', FindingCategory.cuda_dependency, Severity.high, ActionType.suggested_patch,
+       "Uses cuSPARSE.", "Swap to hipSPARSE / rocSPARSE on ROCm."),
+    _p(r'\bcurand', FindingCategory.cuda_dependency, Severity.high, ActionType.suggested_patch,
+       "Uses cuRAND.", "Swap to hipRAND / rocRAND on ROCm."),
+    _p(r'\bcusolver', FindingCategory.cuda_dependency, Severity.high, ActionType.suggested_patch,
+       "Uses cuSOLVER.", "Swap to hipSOLVER / rocSOLVER on ROCm."),
+    _p(r'\bnccl\b|ncclAllReduce', FindingCategory.cuda_dependency, Severity.high,
+       ActionType.suggested_patch,
+       "Uses NCCL (NVIDIA collective comms).", "Swap to RCCL on ROCm (drop-in API)."),
+    _p(r'thrust::', FindingCategory.cuda_dependency, Severity.medium, ActionType.suggested_patch,
+       "Uses Thrust.", "Use rocThrust on ROCm (largely drop-in)."),
 ]
 
 # Artifacts we expect an AMD-ready repo to have. Absence => a "missing_artifact" finding.
