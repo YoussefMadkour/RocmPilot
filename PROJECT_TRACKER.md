@@ -107,11 +107,11 @@ and teach the codebase without gating the AI path.
 
 **Frontend [J]**
 - [x] **Report** screen: before/after score comparison, rendered Markdown, artifact list, download report — plus consumed the new agent APIs: real trace + Critic review on Plan, Patch Explainer panel on Patch, `replay_fail` badge fix on Validate (feat/agent-ui)
-- [ ] Visual polish pass (dark cockpit, consistent spacing/badges)
+- [x] Visual polish pass (dark cockpit, consistent spacing/badges) — sticky findings-table header, scrollbar-less mobile rail, all 6 screens verified at 375px with zero overflow (feat/ship-polish)
 
 **Infra [J]**
-- [ ] Verify clean `docker compose up --build` from scratch on a fresh clone
-- [ ] Optional: GitHub Actions (lint backend + build frontend)
+- [ ] Verify clean `docker compose up --build` from scratch on a fresh clone — **re-verify needed**: earlier pass predates the RAG/crawler deps and new frontend
+- [x] Optional: GitHub Actions (pytest py3.12 + next build node 22 on push/PR to dev/main) — `.github/workflows/ci.yml`
 
 **Acceptance:**
 - Full flow runs in the UI in < 3 minutes on a fresh clone.
@@ -125,7 +125,7 @@ and teach the codebase without gating the AI path.
 - [x] [Y] `docs/AMD_SETUP.md` + `scripts/capture_amd_run.sh` — where AMD fits (models on AMD via Fireworks · MI300X validation · ROCm artifacts) and how to run/capture (PR #20)
 - [x] [Y] Capture a real AMD run into `fixtures/` — smoke test PASSED on a Radeon gfx1100 (RDNA3), ROCm 7.2, PyTorch 2.9.1, ~0.84ms inference (via `scripts/amd_capture.ipynb`)
 - [ ] [Y] Record 3-min demo (follow `docs/DEMO_SCRIPT.md`)
-- [ ] [J] Screenshots + README setup polish
+- [x] [J] Screenshots + README setup polish — cockpit gallery in `docs/screenshots/`, professional README merged with the multi-model/RAG era (feat/ship-polish). Screenshots worth refreshing once the demo look is final.
 - [ ] [Both] Dry-run the demo twice; fix anything that stutters
 
 ## AI enhancements (beyond original scope)
