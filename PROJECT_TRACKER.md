@@ -67,6 +67,8 @@ and teach the codebase without gating the AI path.
 - [x] Tune Migration Planner prompt + harden JSON validity (fenced/prose recovery, enum guard) (PR #5, 15 tests)
 - [x] Patch Explainer wired to real changed snippets, surfaced in `PatchResponse` (PR #7, 7 tests)
 - [x] **Bonus:** code-first multi-agent Orchestrator + Critic with agent-activity `trace` on `POST /plan` (PR #8)
+- [x] **Bonus — RAG:** Qdrant knowledge base of curated ROCm/HIP/HIPIFY docs + Fireworks embeddings; fallback-safe (no-op without creds). `python -m app.knowledge.ingest` to build (PR #16)
+- [x] **Bonus — Research/self-heal agent:** on validation failure, gathers RAG + optional web (Tavily) grounding and returns a cited root-cause/fix/next-command; powers the Failure Diagnoser (PR #17). Auto-retry loop is gated on live AMD (roadmap)
 
 **Frontend [J]**
 - [x] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary

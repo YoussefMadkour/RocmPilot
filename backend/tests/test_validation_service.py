@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.agents import failure_diagnoser
+from app.agents import research_agent
 from app.config import settings
 from app.models import ValidationStatus
 from app.services import run_store, validation_service
@@ -30,7 +30,8 @@ def test_replay_passes_no_diagnosis(run, monkeypatch):
 
 def test_replay_fail_produces_failure_with_diagnosis(run, monkeypatch):
     monkeypatch.setattr(settings, "validation_mode", "replay_fail")
-    monkeypatch.setattr(failure_diagnoser.fireworks_service, "complete", lambda **k: None)
+    # Diagnoser now delegates to the research agent; stub its LLM to force fallback.
+    monkeypatch.setattr(research_agent.fireworks_service, "complete", lambda **k: None)
     result = validation_service.validate(run)
     assert result.status == ValidationStatus.failed
     assert not result.smoke_test_passed
@@ -41,10 +42,14 @@ def test_replay_fail_produces_failure_with_diagnosis(run, monkeypatch):
 
 def test_diagnoser_uses_llm_when_available(run, monkeypatch):
     monkeypatch.setattr(settings, "validation_mode", "replay_fail")
-    monkeypatch.setattr(failure_diagnoser.fireworks_service, "complete",
-                        lambda **k: "Root cause: bad HIP state.")
+    monkeypatch.setattr(
+        research_agent.fireworks_service, "complete",
+        lambda **k: '{"root_cause":"bad HIP state","recommended_fix":"reinstall rocm",'
+                    '"confidence":"high","next_command":"rocm-smi"}',
+    )
     result = validation_service.validate(run)
-    assert result.diagnosis == "Root cause: bad HIP state."
+    assert "bad HIP state" in result.diagnosis
+    assert "rocm-smi" in result.diagnosis
 
 
 def test_fixtures_decode_as_utf8(run, monkeypatch):

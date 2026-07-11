@@ -1,24 +1,16 @@
 """Failure Diagnoser agent.
 
-OWNER: Youssef (AI). Reads failed build/smoke-test logs, suggests a root cause + fix.
-Wired into the validate endpoint only when validation fails.
+OWNER: Youssef (AI). Reads failed build/smoke-test logs and returns a root cause +
+fix. Now delegates to the Research Agent so the diagnosis is GROUNDED in the
+ROCm/HIP knowledge base (RAG) and optional web search, with cited sources. Wired
+into the validate endpoint when validation fails. Never raises.
 """
 from __future__ import annotations
 
-from app.agents import prompts
-from app.services import fireworks_service
+from app.agents import research_agent
 
 
 def diagnose(logs: str) -> str:
-    raw = fireworks_service.complete(
-        system=prompts.FAILURE_DIAGNOSER,
-        user=f"Logs:\n{logs}\n\nGive root cause, suggested fix, confidence, next command.",
-        max_tokens=500,
-    )
-    if raw:
-        return raw.strip()
-    return (
-        "Root cause: unable to reach the AMD/ROCm runtime (no HIP device visible).\n"
-        "Suggested fix: ensure /dev/kfd and /dev/dri are mounted and a ROCm PyTorch "
-        "wheel is installed.\nConfidence: medium.\nNext command: `rocminfo`."
-    )
+    """Return a Markdown diagnosis (root cause, fix, confidence, next command, sources)."""
+    problem = "AMD/ROCm validation failed. Diagnose from this log:\n" + (logs or "")
+    return research_agent.investigate(problem).to_markdown()
