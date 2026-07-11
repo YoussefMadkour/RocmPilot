@@ -13,11 +13,11 @@ import sys
 
 from app.config import settings
 from app.knowledge.corpus import SEED_DOCS
-from app.knowledge.fetch_docs import fetch_web_docs
+from app.knowledge.fetch_docs import crawl_docs, fetch_web_docs
 from app.services import fireworks_service
 
 
-def ingest(include_web: bool = True) -> int:
+def ingest(include_web: bool = True, crawl: bool = False) -> int:
     if not settings.qdrant_url:
         print("QDRANT_URL is not set — add it to backend/.env first.")
         return 1
@@ -28,9 +28,15 @@ def ingest(include_web: bool = True) -> int:
     from qdrant_client import QdrantClient, models
 
     docs = list(SEED_DOCS)
-    if include_web:
-        print("Fetching live ROCm/HIP docs ...")
+    if crawl:
+        print("Crawling the ROCm docs site (bounded) ...")
+        web = crawl_docs()
+    elif include_web:
+        print("Fetching the fixed ROCm/HIP doc set ...")
         web = fetch_web_docs()
+    else:
+        web = []
+    if web:
         print(f"  +{len(web)} chunks from {len({d['source'] for d in web})} live pages")
         docs += web
 
@@ -62,4 +68,6 @@ def ingest(include_web: bool = True) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(ingest())
+    # `python -m app.knowledge.ingest` -> curated + fixed doc set (fast, reliable)
+    # `python -m app.knowledge.ingest --crawl` -> curated + bounded site crawl (breadth)
+    sys.exit(ingest(crawl="--crawl" in sys.argv))

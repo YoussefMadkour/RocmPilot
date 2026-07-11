@@ -30,3 +30,20 @@ def test_chunk_drops_tiny_fragments():
     text = "short\n\n" + "y" * 300
     chunks = fetch_docs._chunk(text, size=800)
     assert all("short" not in c or len(c) > 80 for c in chunks)
+
+
+def test_doc_links_same_host_only_and_deanchored():
+    html = """
+      <a href="how-to/porting.html#section">in-host</a>
+      <a href="/en/latest/reference/">dir</a>
+      <a href="https://evil.example.com/x.html">off-host</a>
+      <a href="https://github.com/ROCm/HIP">off-host2</a>
+      <a href="mailto:x@y.com">mail</a>
+      <a href="guide.pdf">pdf</a>
+    """
+    links = fetch_docs._doc_links("https://rocm.docs.amd.com/projects/HIP/en/latest/index.html", html)
+    assert any(l.endswith("porting.html") for l in links)
+    assert any(l.endswith("/en/latest/reference/") for l in links)
+    assert all("evil.example.com" not in l and "github.com" not in l for l in links)
+    assert all("#" not in l for l in links)
+    assert not any(l.endswith(".pdf") for l in links)
