@@ -11,6 +11,28 @@ from app.models import Artifact, MigrationPlan, ScoreBreakdown, ValidationResult
 from app.services import fireworks_service
 
 
+def _replay_note(mode: str) -> str:
+    if mode in ("replay", "replay_fail"):
+        return "> _Saved AMD run (replay) — not executed live during this session._\n"
+    return ""
+
+
+def _diagnosis_section(validation: ValidationResult) -> str:
+    if validation.diagnosis:
+        return f"\n## Failure diagnosis\n{validation.diagnosis}\n"
+    return ""
+
+
+def _strip_doc_fence(text: str) -> str:
+    """Drop a code fence wrapping the WHOLE document (some models add ```markdown)."""
+    t = text.strip()
+    if t.startswith("```"):
+        lines = t.splitlines()
+        if len(lines) >= 2 and lines[-1].strip() == "```":
+            t = "\n".join(lines[1:-1]).strip()
+    return t
+
+
 def _fallback(
     source: str,
     plan: MigrationPlan,
@@ -33,6 +55,7 @@ def _fallback(
 - Final (validated): **{score.final}/100**
 
 ## AMD validation evidence ({validation.mode} mode)
+{_replay_note(validation.mode)}
 - Status: **{validation.status.value}**
 - ROCm detected: {validation.rocm_detected}
 - HIP available: {validation.hip_available}
@@ -41,7 +64,7 @@ def _fallback(
 - Smoke test: {'passed' if validation.smoke_test_passed else 'failed'}
 - Benchmark: {'passed' if validation.benchmark_passed else 'failed'}
 - Inference latency: {validation.inference_latency_ms} ms
-
+{_diagnosis_section(validation)}
 ## Generated artifacts
 {artifact_list}
 
@@ -73,4 +96,4 @@ def write(
         user="Data:\n" + json.dumps(payload, indent=2) + "\n\nReturn Markdown only.",
         max_tokens=1500,
     )
-    return raw.strip() if raw else _fallback(source, plan, artifacts, validation, score)
+    return _strip_doc_fence(raw) if raw else _fallback(source, plan, artifacts, validation, score)

@@ -100,7 +100,7 @@ and teach the codebase without gating the AI path.
 
 ## Phase 4 — Report + polish + ship
 **Backend [Y]**
-- [ ] Report Writer prompt produces a judge-ready report from real data
+- [x] Report Writer prompt produces a judge-ready report from real data — sharpened prompt (6 sections, honest replay labeling, ROCm nuance), richer fallback (failure diagnosis + replay note), and `readiness_report.md` now registered as an artifact so `artifacts.zip` includes it (PR #14, 6 tests)
 
 **Frontend [J]**
 - [ ] **Report** screen: before/after score comparison, rendered Markdown, artifact list, download report

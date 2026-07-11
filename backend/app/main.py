@@ -217,7 +217,19 @@ def get_report(run_id: str) -> ReportResponse:
     score = _score_from_state(state)
 
     markdown = report_service.build(run_id, state["source"], plan, artifacts, validation, score)
-    run_store.update_state(run_id, stage=RunStage.reported.value)
+
+    # Register the report itself as an artifact so "download everything"
+    # (artifacts.zip) genuinely includes it. Idempotent across repeated GETs.
+    report_artifact = Artifact(name="readiness_report.md", path="readiness_report.md",
+                               language="markdown")
+    if not any(a.name == report_artifact.name for a in artifacts):
+        artifacts.append(report_artifact)
+
+    run_store.update_state(
+        run_id,
+        stage=RunStage.reported.value,
+        artifacts=[a.model_dump(mode="json") for a in artifacts],
+    )
     return ReportResponse(run_id=run_id, markdown=markdown, score=score, artifacts=artifacts)
 
 
