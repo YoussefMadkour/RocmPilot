@@ -42,6 +42,8 @@ GUARD = 'torch.cuda.is_available()'
     "x = x.to('cuda')",
     'x = x.to("cuda")',
     'dev = torch.device("cuda")',
+    "device = 'cuda'",
+    'self.device = "cuda"',
 ])
 def test_rewrites_guard_unambiguous_cuda_forms(src):
     out = patch_service._rewrite_python(src)

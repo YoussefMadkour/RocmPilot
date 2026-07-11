@@ -34,11 +34,14 @@ MAX_EXPLANATIONS = 12
 #   torch.device("cuda")  -> guarded lookup
 #   x.to("cuda")          -> guarded lookup   (bare literal only)
 #   x.cuda()              -> x.to(guarded)     (no-arg only; .cuda(0) left alone)
+#   device = "cuda"       -> guarded lookup   (assignment to a device var; matches
+#                                              the scanner's auto_patch classification)
 _GUARD = '"cuda" if torch.cuda.is_available() else "cpu"'
 _REWRITES = [
     (re.compile(r'torch\.device\(\s*["\']cuda["\']\s*\)'), f'torch.device({_GUARD})'),
     (re.compile(r'\.to\(\s*["\']cuda["\']\s*\)'), f'.to({_GUARD})'),
     (re.compile(r'\.cuda\(\s*\)'), f'.to({_GUARD})'),
+    (re.compile(r'(\bdevice\s*=\s*)["\']cuda["\']'), rf'\g<1>{_GUARD}'),
 ]
 
 
