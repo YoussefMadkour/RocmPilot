@@ -39,21 +39,28 @@ export default function PatchPage() {
   useEffect(() => {
     if (!id || started.current) return;
     started.current = true; // avoid double-POST from React strict mode
-    api
-      .patch(id)
-      .then(async (res) => {
-        setArtifacts(res.artifacts);
-        setExplanations(res.explanations ?? []);
-        const loaded = await Promise.all(
-          res.artifacts.map((a) =>
-            api.artifact(id, a.name).then((r) => [a.name, r.content] as const),
-          ),
-        );
-        setContents(Object.fromEntries(loaded));
-      })
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Patch generation failed"),
+    const finish = async (arts: Artifact[], exps: PatchExplanation[]) => {
+      setArtifacts(arts);
+      setExplanations(exps);
+      const loaded = await Promise.all(
+        arts.map((a) => api.artifact(id, a.name).then((r) => [a.name, r.content] as const)),
       );
+      setContents(Object.fromEntries(loaded));
+    };
+    const runPatch = () =>
+      api
+        .patch(id)
+        .then((res) => finish(res.artifacts, res.explanations ?? []))
+        .catch((e) => setError(e instanceof Error ? e.message : "Patch generation failed"));
+    // Reuse cached artifacts if patching already ran; otherwise generate once.
+    api
+      .getRun(id)
+      .then((run) =>
+        run.artifacts && run.artifacts.length
+          ? finish(run.artifacts, run.explanations ?? [])
+          : runPatch(),
+      )
+      .catch(runPatch);
   }, [id]);
 
   function download(name: string) {

@@ -13,5 +13,5 @@ class AgentContext:
         self.run_id = run_id
         self.events: list[AgentEvent] = []
 
-    def log(self, agent: str, message: str, *, ok: bool = True) -> None:
-        self.events.append(AgentEvent(agent=agent, message=message, ok=ok))
+    def log(self, agent: str, message: str, *, ok: bool = True, model: str | None = None) -> None:
+        self.events.append(AgentEvent(agent=agent, message=message, ok=ok, model=model))

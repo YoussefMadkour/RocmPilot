@@ -44,13 +44,10 @@ export function CockpitRail({ runId }: { runId?: string }) {
   useEffect(() => {
     if (!runId) return;
     api
-      .listRuns()
-      .then((runs) => {
-        const run = runs.find((r) => r.run_id === runId);
-        if (run) {
-          setStage(run.stage);
-          setScore(run.score);
-        }
+      .getRun(runId)
+      .then((run) => {
+        setStage(run.stage);
+        setScore(run.score);
       })
       .catch(() => {
         /* rail degrades to route-only highlighting if the API is down */

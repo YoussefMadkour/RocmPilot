@@ -2,10 +2,21 @@
 
 // 01 · Intake — point the cockpit at a repo and start a run.
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { api } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { api, type RunStage, type RunSummary } from "@/lib/api";
 import { CockpitRail } from "@/components/cockpit-rail";
+
+// Where to drop a returning user back into a run — its current stage.
+const STAGE_SEGMENT: Record<RunStage, string> = {
+  created: "scan",
+  scanned: "scan",
+  planned: "plan",
+  patched: "patch",
+  validated: "validate",
+  reported: "report",
+};
 
 // Verified CUDA-first showcase repos from PROJECT_TRACKER.md.
 const SUGGESTED = [
@@ -20,6 +31,11 @@ export default function IntakePage() {
   const [repoUrl, setRepoUrl] = useState("");
   const [busy, setBusy] = useState<"repo" | "sample" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [recent, setRecent] = useState<RunSummary[]>([]);
+
+  useEffect(() => {
+    api.listRuns().then((runs) => setRecent(runs.slice(0, 5))).catch(() => {});
+  }, []);
 
   async function start(body: { repo_url?: string; use_sample?: boolean }) {
     setBusy(body.use_sample ? "sample" : "repo");
@@ -122,6 +138,36 @@ export default function IntakePage() {
             </p>
           )}
         </section>
+
+        {recent.length > 0 && (
+          <section className="mt-8 max-w-xl">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-ink-dim">
+              Recent runs
+            </p>
+            <ul className="mt-2 divide-y divide-edge/60 rounded-xl border border-edge bg-panel">
+              {recent.map((r) => (
+                <li key={r.run_id}>
+                  <Link
+                    href={`/runs/${r.run_id}/${STAGE_SEGMENT[r.stage]}`}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-edge/30"
+                  >
+                    <span className="min-w-0 truncate font-mono text-xs text-ink-dim">
+                      {r.source.replace("https://github.com/", "").replace("sample:", "sample · ")}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-3">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-ink-dim">
+                        {r.stage}
+                      </span>
+                      <span className="font-mono text-xs text-ink">
+                        {r.score.final ?? r.score.after_planned ?? r.score.before}/100
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <p className="mt-6 font-mono text-[11px] text-ink-dim">
           Deterministic scanner · Fireworks agents optional · AMD validation

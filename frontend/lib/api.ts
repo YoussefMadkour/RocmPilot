@@ -60,6 +60,7 @@ export interface AgentEvent {
   agent: string; // "orchestrator" | "planner" | "critic"
   message: string;
   ok: boolean;
+  model?: string | null; // the AMD-hosted model that ran this step, if any
 }
 
 export interface Artifact {
@@ -105,6 +106,22 @@ export interface ScanResponse {
   score: ScoreBreakdown;
 }
 
+export interface RunDetail {
+  run_id: string;
+  stage: RunStage;
+  source: string;
+  score: ScoreBreakdown;
+  findings: Finding[] | null;
+  findings_by_category: Record<string, number> | null;
+  files_scanned: number | null;
+  plan: MigrationPlan | null;
+  critique: Critique | null;
+  trace: AgentEvent[] | null;
+  artifacts: Artifact[] | null;
+  explanations: PatchExplanation[] | null;
+  validation: ValidationResult | null;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -119,6 +136,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   listRuns: () => request<RunSummary[]>("/api/runs"),
+  getRun: (id: string) => request<RunDetail>(`/api/runs/${id}`),
   createRun: (body: { repo_url?: string; use_sample?: boolean }) =>
     request<RunSummary>("/api/runs", { method: "POST", body: JSON.stringify(body) }),
   scan: (id: string) =>

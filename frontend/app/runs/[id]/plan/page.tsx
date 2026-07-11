@@ -27,14 +27,25 @@ export default function PlanPage() {
   useEffect(() => {
     if (!id || started.current) return;
     started.current = true; // avoid double-POST from React strict mode
+    const hydrate = (res: { plan: MigrationPlan; critique: Critique | null; trace: AgentEvent[] }) => {
+      setPlan(res.plan);
+      setCritique(res.critique);
+      setTrace(res.trace);
+    };
+    // Read the cached plan if this step already ran; otherwise run it once.
     api
-      .plan(id)
-      .then((res) => {
-        setPlan(res.plan);
-        setCritique(res.critique);
-        setTrace(res.trace);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "Planning failed"));
+      .getRun(id)
+      .then((run) =>
+        run.plan
+          ? hydrate({ plan: run.plan, critique: run.critique, trace: run.trace ?? [] })
+          : api.plan(id).then(hydrate),
+      )
+      .catch(() =>
+        api
+          .plan(id)
+          .then(hydrate)
+          .catch((e) => setError(e instanceof Error ? e.message : "Planning failed")),
+      );
   }, [id]);
 
   if (error)
@@ -195,6 +206,11 @@ export default function PlanPage() {
                   <span className="mr-2 rounded border border-edge px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ink-dim">
                     {e.agent}
                   </span>
+                  {e.model && (
+                    <span className="mr-2 rounded border border-accent/40 bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-accent">
+                      {e.model}
+                    </span>
+                  )}
                   <span className="text-xs text-ink-dim">{e.message}</span>
                 </div>
               </li>

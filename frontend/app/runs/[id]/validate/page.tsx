@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Markdown from "react-markdown";
 import { api, type ScoreBreakdown, type ValidationResult } from "@/lib/api";
 
 function Stat({ label, value, tone }: { label: string; value: React.ReactNode; tone?: string }) {
@@ -27,13 +28,20 @@ export default function ValidatePage() {
   useEffect(() => {
     if (!id || started.current) return;
     started.current = true; // avoid double-POST from React strict mode
+    const hydrate = (v: ValidationResult, s: ScoreBreakdown) => {
+      setValidation(v);
+      setScore(s);
+    };
+    const runValidate = () =>
+      api
+        .validate(id)
+        .then((res) => hydrate(res.validation, res.score))
+        .catch((e) => setError(e instanceof Error ? e.message : "Validation failed to start"));
+    // Reuse the cached validation if it already ran; otherwise validate once.
     api
-      .validate(id)
-      .then((res) => {
-        setValidation(res.validation);
-        setScore(res.score);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "Validation failed to start"));
+      .getRun(id)
+      .then((run) => (run.validation ? hydrate(run.validation, run.score) : runValidate()))
+      .catch(runValidate);
   }, [id]);
 
   if (error)
@@ -156,9 +164,9 @@ export default function ValidatePage() {
             Failure diagnosis
           </h2>
           {validation.diagnosis ? (
-            <pre className="mt-2 whitespace-pre-wrap font-mono text-xs leading-relaxed text-ink-dim">
-              {validation.diagnosis}
-            </pre>
+            <div className="report-md mt-2 text-sm">
+              <Markdown>{validation.diagnosis}</Markdown>
+            </div>
           ) : (
             <p className="mt-2 text-sm text-ink-dim">
               The validation run failed — check the log below for the first error.

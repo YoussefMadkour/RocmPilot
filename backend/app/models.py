@@ -105,6 +105,7 @@ class AgentEvent(BaseModel):
     agent: str            # "orchestrator" | "planner" | "critic"
     message: str
     ok: bool = True       # False = this step flagged a problem
+    model: Optional[str] = None   # which model ran this step (short name), if any
 
 
 class KnowledgeChunk(BaseModel):
@@ -150,6 +151,23 @@ class ScanResponse(BaseModel):
     findings_by_category: dict[str, int]
     files_scanned: int
     score: ScoreBreakdown
+
+
+class RunDetail(BaseModel):
+    """Read-only snapshot of a run — lets the UI hydrate any screen without re-running a step."""
+    run_id: str
+    stage: RunStage
+    source: str
+    score: ScoreBreakdown
+    findings: Optional[list[Finding]] = None
+    findings_by_category: Optional[dict[str, int]] = None
+    files_scanned: Optional[int] = None
+    plan: Optional[MigrationPlan] = None
+    critique: Optional[Critique] = None
+    trace: Optional[list[AgentEvent]] = None
+    artifacts: Optional[list[Artifact]] = None
+    explanations: Optional[list[PatchExplanation]] = None
+    validation: Optional[ValidationResult] = None
 
 
 class PlanResponse(BaseModel):

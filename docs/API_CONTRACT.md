@@ -12,6 +12,7 @@ status; the frontend client throws that message.
 
 ```
 GET  /api/runs                 -> list all runs, newest first (RunSummary[])
+GET  /api/runs/{id}            -> read-only run snapshot (RunDetail) — hydrate any screen
 POST /api/runs                 -> create a run (sample or repo URL)
 POST /api/runs/{id}/scan       -> deterministic scan + before/after score
 POST /api/runs/{id}/plan       -> orchestrated plan (Planner + Critic) + agent trace
@@ -56,12 +57,18 @@ timeline.
   "critique": { "approved": true, "issues": [], "notes": "LLM + deterministic review." },
   "trace": [
     { "agent": "orchestrator", "message": "Coordinating migration plan ...", "ok": true },
-    { "agent": "planner", "message": "Drafted 5 actions ...", "ok": true },
-    { "agent": "critic", "message": "Reviewed the plan — approved ...", "ok": true }
+    { "agent": "planner", "message": "Drafted 5 actions ...", "ok": true, "model": "deepseek-v4-pro" },
+    { "agent": "critic", "message": "Reviewed the plan — approved ...", "ok": true, "model": "glm-5p2" }
   ]
 }
 ```
-`agent`: orchestrator | planner | critic. `ok: false` marks a step that flagged a problem.
+`agent`: orchestrator | planner | critic. `ok: false` marks a step that flagged a
+problem. `model` (when present) is the AMD-hosted model that ran the step.
+
+**RunDetail** — `GET /api/runs/{id}` returns `{run_id, stage, source, score}` plus
+any completed step's cached output (`findings`, `plan`, `critique`, `trace`,
+`artifacts`, `explanations`, `validation`) — all nullable. The UI hydrates a screen
+from this instead of re-running the step.
 
 **PatchExplanation** — a grounded, per-file note in the `POST /patch` response
 (`{run_id, artifacts, explanations, score}`); powers the Patch screen's diff notes.

@@ -48,11 +48,32 @@ export default function ScanPage() {
   useEffect(() => {
     if (!id || started.current) return;
     started.current = true; // avoid double-POST from React strict mode
+    const runScan = () =>
+      api.scan(id).then(setScan).catch((e) =>
+        setError(e instanceof Error ? e.message : "Scan failed"),
+      );
+    // Reuse the cached scan if it already ran; otherwise scan once.
     api
-      .scan(id)
-      .then(setScan)
-      .catch((e) => setError(e instanceof Error ? e.message : "Scan failed"));
+      .getRun(id)
+      .then((run) =>
+        run.findings
+          ? setScan({
+              run_id: id,
+              findings: run.findings,
+              findings_by_category: run.findings_by_category ?? {},
+              files_scanned: run.files_scanned ?? 0,
+              score: run.score,
+            })
+          : runScan(),
+      )
+      .catch(runScan);
   }, [id]);
+
+  // The hard 20% hipify can't safely auto-handle — custom kernels & warp hazards.
+  const kernelRisk = useMemo(
+    () => (scan?.findings ?? []).filter((f) => f.category === "manual_blocker").length,
+    [scan],
+  );
 
   const severityCounts = useMemo(() => {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -124,6 +145,29 @@ export default function ScanPage() {
           Generate migration plan →
         </Link>
       </section>
+
+      {/* Kernel-risk callout — the hard 20% named precisely */}
+      {kernelRisk > 0 && (
+        <section className="rounded-xl border border-ember/40 bg-ember/5 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-ember/40 bg-ember/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ember">
+              Kernel risk · the hard 20%
+            </span>
+            <p className="text-sm text-ink-dim">
+              <span className="font-semibold text-ink">{kernelRisk}</span> kernel-level
+              hazard{kernelRisk === 1 ? "" : "s"} hipify can&apos;t safely auto-port —
+              warp/wavefront-64 logic, tensor-core intrinsics, or custom kernels.
+              <button
+                type="button"
+                onClick={() => setCatFilter("manual_blocker")}
+                className="ml-2 underline decoration-dotted underline-offset-2 hover:text-ink"
+              >
+                Show them →
+              </button>
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Findings table with filters */}
       <section className="rounded-xl border border-edge bg-panel p-6">

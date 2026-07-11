@@ -17,13 +17,17 @@ from fastapi.responses import Response
 
 from app.agents import orchestrator
 from app.models import (
+    AgentEvent,
     Artifact,
     CreateRunRequest,
+    Critique,
     Finding,
     MigrationPlan,
+    PatchExplanation,
     PatchResponse,
     PlanResponse,
     ReportResponse,
+    RunDetail,
     RunStage,
     RunSummary,
     ScanResponse,
@@ -108,6 +112,36 @@ def create_run(req: CreateRunRequest) -> RunSummary:
     run_store.update_state(run_id, stage=RunStage.created.value, score={"before": 0})
     return RunSummary(
         run_id=run_id, stage=RunStage.created, source=source, score=ScoreBreakdown(before=0)
+    )
+
+
+# --------------------------------------------------------------------------- #
+# GET /api/runs/{id} — read-only snapshot; lets the UI hydrate without re-running
+# --------------------------------------------------------------------------- #
+@app.get("/api/runs/{run_id}", response_model=RunDetail)
+def get_run(run_id: str) -> RunDetail:
+    state = _require_run(run_id)
+    findings = (
+        [Finding.model_validate(f) for f in state["findings"]] if "findings" in state else None
+    )
+    return RunDetail(
+        run_id=run_id,
+        stage=RunStage(state.get("stage", "created")),
+        source=state.get("source", ""),
+        score=_score_from_state(state),
+        findings=findings,
+        findings_by_category=scanner_service.count_by_category(findings) if findings else None,
+        files_scanned=state.get("files_scanned"),
+        plan=MigrationPlan.model_validate(state["plan"]) if "plan" in state else None,
+        critique=Critique.model_validate(state["critique"]) if "critique" in state else None,
+        trace=[AgentEvent.model_validate(e) for e in state["plan_trace"]]
+        if "plan_trace" in state else None,
+        artifacts=[Artifact.model_validate(a) for a in state["artifacts"]]
+        if "artifacts" in state else None,
+        explanations=[PatchExplanation.model_validate(e) for e in state["patch_explanations"]]
+        if "patch_explanations" in state else None,
+        validation=ValidationResult.model_validate(state["validation"])
+        if "validation" in state else None,
     )
 
 
