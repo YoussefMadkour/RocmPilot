@@ -13,10 +13,11 @@ import sys
 
 from app.config import settings
 from app.knowledge.corpus import SEED_DOCS
+from app.knowledge.fetch_docs import fetch_web_docs
 from app.services import fireworks_service
 
 
-def ingest() -> int:
+def ingest(include_web: bool = True) -> int:
     if not settings.qdrant_url:
         print("QDRANT_URL is not set — add it to backend/.env first.")
         return 1
@@ -26,7 +27,14 @@ def ingest() -> int:
 
     from qdrant_client import QdrantClient, models
 
-    texts = [d["text"] for d in SEED_DOCS]
+    docs = list(SEED_DOCS)
+    if include_web:
+        print("Fetching live ROCm/HIP docs ...")
+        web = fetch_web_docs()
+        print(f"  +{len(web)} chunks from {len({d['source'] for d in web})} live pages")
+        docs += web
+
+    texts = [d["text"] for d in docs]
     print(f"Embedding {len(texts)} chunks with {settings.fireworks_embedding_model} ...")
     vectors = fireworks_service.embed(texts)
     if not vectors:
@@ -44,12 +52,12 @@ def ingest() -> int:
         collection_name=settings.knowledge_collection,
         points=[
             models.PointStruct(id=i, vector=vectors[i],
-                               payload={"text": SEED_DOCS[i]["text"],
-                                        "source": SEED_DOCS[i]["source"]})
-            for i in range(len(SEED_DOCS))
+                               payload={"text": docs[i]["text"], "source": docs[i]["source"]})
+            for i in range(len(docs))
         ],
     )
-    print(f"Ingested {len(SEED_DOCS)} chunks into Qdrant. Knowledge base is live.")
+    print(f"Ingested {len(docs)} chunks into Qdrant "
+          f"({len(SEED_DOCS)} curated + {len(docs) - len(SEED_DOCS)} live). Knowledge base is live.")
     return 0
 
 
