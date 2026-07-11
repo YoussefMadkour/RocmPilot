@@ -34,6 +34,54 @@ body {
   animation: led-pulse 1.6s ease-in-out infinite;
 }
 
+/* Rendered Markdown (Report screen). Scoped so it can't leak into app chrome. */
+.report-md h1,
+.report-md h2,
+.report-md h3 {
+  @apply font-display font-semibold;
+}
+.report-md h1 {
+  @apply text-2xl;
+}
+.report-md h2 {
+  @apply mt-6 border-b border-edge pb-1 text-lg;
+}
+.report-md h3 {
+  @apply mt-4 text-base;
+}
+.report-md p {
+  @apply mt-3 text-sm leading-relaxed text-ink-dim;
+}
+.report-md ul,
+.report-md ol {
+  @apply mt-3 space-y-1 pl-5 text-sm text-ink-dim;
+}
+.report-md ul {
+  @apply list-disc;
+}
+.report-md ol {
+  @apply list-decimal;
+}
+.report-md strong {
+  @apply text-ink;
+}
+.report-md code {
+  @apply rounded bg-bay px-1 py-0.5 font-mono text-xs;
+}
+.report-md pre {
+  @apply mt-3 overflow-x-auto rounded-lg border border-edge bg-bay p-3;
+}
+.report-md a {
+  @apply text-ember underline;
+}
+.report-md table {
+  @apply mt-3 w-full border-collapse text-sm;
+}
+.report-md th,
+.report-md td {
+  @apply border border-edge px-2 py-1 text-left;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .led-pulse {
     animation: none;
