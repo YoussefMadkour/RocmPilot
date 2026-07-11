@@ -385,6 +385,22 @@ def get_artifacts_zip(run_id: str) -> Response:
     )
 
 
+@app.get("/api/runs/{run_id}/patched_repo.zip")
+def get_patched_repo(run_id: str) -> Response:
+    """The repo with the device patches applied + ROCm artifacts — ready to run."""
+    state = _require_run(run_id)
+    if "artifacts" not in state:
+        raise HTTPException(status_code=409, detail="Generate patches first (run the patch step)")
+    data = patch_service.patched_repo_zip(run_id)
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="rocmpilot_{run_id}_patched_repo.zip"'
+        },
+    )
+
+
 @app.get("/api/runs/{run_id}/artifacts/{name}")
 def get_artifact_content(run_id: str, name: str) -> dict:
     _require_run(run_id)

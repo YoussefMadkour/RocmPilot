@@ -13,7 +13,9 @@ graceful availability check.
 from __future__ import annotations
 
 import difflib
+import io
 import re
+import zipfile
 
 from app.agents import patch_explainer
 from app.models import Artifact, PatchExplanation
@@ -21,6 +23,7 @@ from app.services import (
     benchmark_service,
     dockerfile_service,
     run_store,
+    scanner_service,
     smoke_test_service,
 )
 
@@ -125,3 +128,39 @@ def generate(run_id: str) -> tuple[list[Artifact], list[PatchExplanation]]:
         if kind == "result":
             artifacts, explanations = payload
     return artifacts, explanations
+
+
+# ROCm artifacts to drop into the patched repo root (generated at the patch step).
+_ROCM_ARTIFACTS = ("Dockerfile.rocm", "smoke_test.py", "benchmark.py")
+
+
+def patched_repo_zip(run_id: str) -> bytes:
+    """A ready-to-run copy of the repo: source with the device patches APPLIED,
+    plus the generated ROCm Dockerfile / smoke test / benchmark at the root.
+
+    Unlike patch.diff (which the user applies themselves), this is the fixed repo
+    they can build and run directly on AMD.
+    """
+    source = run_store.source_dir(run_id)
+    buf = io.BytesIO()
+    written: set[str] = set()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(source.rglob("*")):
+            if path.is_dir() or any(part in scanner_service.SKIP_DIRS for part in path.parts):
+                continue
+            rel = str(path.relative_to(source))
+            if path.suffix == ".py":
+                # Apply the same safe device-handling rewrites as patch.diff.
+                zf.writestr(f"patched_repo/{rel}", _rewrite_python(path.read_text(errors="ignore")))
+            else:
+                zf.writestr(f"patched_repo/{rel}", path.read_bytes())
+            written.add(rel)
+        # Add the generated ROCm artifacts at the repo root (skip if the repo
+        # already ships a file by that name).
+        for name in _ROCM_ARTIFACTS:
+            if name in written:
+                continue
+            content = run_store.read_artifact(run_id, name)
+            if content is not None:
+                zf.writestr(f"patched_repo/{name}", content)
+    return buf.getvalue()

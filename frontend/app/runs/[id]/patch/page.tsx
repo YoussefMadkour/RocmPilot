@@ -132,12 +132,19 @@ export default function PatchPage() {
             repo was missing. Review, download, apply.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={api.patchedRepoZipUrl(id)}
+            className="rounded-lg border border-edge px-4 py-2 text-sm font-medium hover:border-ink-dim"
+            title="The repo with the fixes applied + ROCm files — ready to build & run"
+          >
+            Download patched repo (.zip)
+          </a>
           <a
             href={api.artifactsZipUrl(id)}
             className="rounded-lg border border-edge px-4 py-2 text-sm font-medium hover:border-ink-dim"
           >
-            Download all (.zip)
+            Artifacts only (.zip)
           </a>
           <Link
             href={`/runs/${id}/validate`}

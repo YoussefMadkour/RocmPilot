@@ -171,8 +171,9 @@ export const api = {
     request<{ run_id: string; name: string; content: string }>(
       `/api/runs/${id}/artifacts/${name}`,
     ),
-  // Browser-navigable download URL (binary zip — not a JSON request).
+  // Browser-navigable download URLs (binary zips — not JSON requests).
   artifactsZipUrl: (id: string) => `${BASE_URL}/api/runs/${id}/artifacts.zip`,
+  patchedRepoZipUrl: (id: string) => `${BASE_URL}/api/runs/${id}/patched_repo.zip`,
   // SSE endpoints for live progress (consume with EventSource).
   planStreamUrl: (id: string) => `${BASE_URL}/api/runs/${id}/plan/stream`,
   patchStreamUrl: (id: string) => `${BASE_URL}/api/runs/${id}/patch/stream`,

@@ -101,12 +101,19 @@ export default function ReportPage() {
           <p className="font-mono text-[11px] tracking-widest text-ink-dim">
             ROCM READINESS · BEFORE → AFTER
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={api.patchedRepoZipUrl(id)}
+              className="rounded-lg border border-edge px-4 py-2 text-sm font-medium hover:border-ink-dim"
+              title="The repo with the fixes applied + ROCm files — ready to build & run"
+            >
+              Download patched repo (.zip)
+            </a>
             <a
               href={api.artifactsZipUrl(id)}
               className="rounded-lg border border-edge px-4 py-2 text-sm font-medium hover:border-ink-dim"
             >
-              Download all artifacts (.zip)
+              Artifacts (.zip)
             </a>
             <button
               onClick={downloadReport}
@@ -127,6 +134,13 @@ export default function ReportPage() {
           </span>
           <ScoreStep label="Validated final" value={score?.final} tone="text-ready" />
         </div>
+        {score != null && score.before === score.after_planned && (
+          <p className="mt-3 text-xs text-ink-dim">
+            Before and After match because this repo was already at the projected
+            readiness ceiling — few blockers to remove on paper. The real gain is
+            the validated jump to {score.final ?? "—"} once it passed on real AMD hardware.
+          </p>
+        )}
       </section>
 
       {/* The judge-ready report */}
