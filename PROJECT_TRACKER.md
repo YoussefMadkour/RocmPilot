@@ -103,7 +103,7 @@ and teach the codebase without gating the AI path.
 - [x] Report Writer prompt produces a judge-ready report from real data — sharpened prompt (6 sections, honest replay labeling, ROCm nuance), richer fallback (failure diagnosis + replay note), and `readiness_report.md` now registered as an artifact so `artifacts.zip` includes it (PR #14, 6 tests)
 
 **Frontend [J]**
-- [ ] **Report** screen: before/after score comparison, rendered Markdown, artifact list, download report
+- [x] **Report** screen: before/after score comparison, rendered Markdown, artifact list, download report — plus consumed the new agent APIs: real trace + Critic review on Plan, Patch Explainer panel on Patch, `replay_fail` badge fix on Validate (feat/agent-ui)
 - [ ] Visual polish pass (dark cockpit, consistent spacing/badges)
 
 **Infra [J]**
