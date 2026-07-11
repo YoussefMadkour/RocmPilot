@@ -98,7 +98,7 @@ def plan(findings: list[Finding], *, revision_notes: list[str] | None = None) ->
         ),
         model=settings.planner_model,
         response_format={"type": "json_object"},
-        max_tokens=2500,  # reasoning models spend budget on reasoning before the JSON
+        max_tokens=4000,  # reasoning models spend budget on reasoning; bigger repos need headroom
     )
     if not raw:
         return _fallback(findings)
