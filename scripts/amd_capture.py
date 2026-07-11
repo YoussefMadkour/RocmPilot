@@ -26,15 +26,24 @@ import torch
 SIZE, N_RUNS = 1024, 50
 
 
-def _marketing_name() -> str | None:
+_CPU_HINTS = ("EPYC", "Ryzen", "Threadripper", "Core Processor", "Xeon", "Intel")
+
+
+def _gpu_name() -> str:
+    """The accelerator's name. torch is the source of truth; rocminfo is a
+    fallback that must SKIP the CPU agent (rocminfo lists the CPU first)."""
+    if torch.cuda.is_available():
+        try:
+            return torch.cuda.get_device_name(0)
+        except Exception:  # noqa: BLE001
+            pass
     try:
         out = subprocess.run(["rocminfo"], capture_output=True, text=True, timeout=30).stdout
-        for line in out.splitlines():
-            if "Marketing Name" in line:
-                return line.split(":", 1)[1].strip()
-    except Exception:  # noqa: BLE001 — best-effort; torch has the name too
-        pass
-    return None
+        names = [l.split(":", 1)[1].strip() for l in out.splitlines() if "Marketing Name" in l]
+        gpus = [n for n in names if not any(h in n for h in _CPU_HINTS)]
+        return gpus[0] if gpus else (names[0] if names else "cpu")
+    except Exception:  # noqa: BLE001
+        return "cpu"
 
 
 def capture(out_dir: str = ".") -> str:
@@ -46,7 +55,7 @@ def capture(out_dir: str = ".") -> str:
 
     accel = torch.cuda.is_available()
     hip = getattr(torch.version, "hip", None)
-    gpu = (_marketing_name() or (torch.cuda.get_device_name(0) if accel else "cpu"))
+    gpu = _gpu_name()
     dev = torch.device("cuda" if accel else "cpu")
 
     out("=== RocmPilot AMD Validation (LIVE — AMD Developer Cloud) ===")
