@@ -14,6 +14,7 @@ import json
 from dataclasses import dataclass, field
 
 from app.agents import json_utils, prompts
+from app.config import settings
 from app.services import fireworks_service, knowledge_service, web_search
 
 
@@ -81,8 +82,9 @@ def investigate(problem: str) -> ResearchResult:
             + 'Return JSON: {"root_cause","recommended_fix","confidence"'
               ' (low|medium|high),"next_command"}.'
         ),
+        model=settings.research_model,
         response_format={"type": "json_object"},
-        max_tokens=700,
+        max_tokens=3000,  # Kimi's long reasoning needs headroom before the JSON
     )
     if not raw:
         return _fallback(problem, sources)

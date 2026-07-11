@@ -8,6 +8,7 @@ import json
 import re
 
 from app.agents import prompts
+from app.config import settings
 from app.models import ActionType, Finding, MigrationPlan, PlanAction, Severity
 from app.services import fireworks_service
 
@@ -95,7 +96,9 @@ def plan(findings: list[Finding], *, revision_notes: list[str] | None = None) ->
             '\n\nReturn JSON: {"summary": str, "actions": '
             '[{"title","detail","severity","action_type"}], "manual_blockers": [str]}.'
         ),
+        model=settings.planner_model,
         response_format={"type": "json_object"},
+        max_tokens=2500,  # reasoning models spend budget on reasoning before the JSON
     )
     if not raw:
         return _fallback(findings)

@@ -21,16 +21,20 @@ def complete(
     system: str,
     user: str,
     *,
+    model: Optional[str] = None,
     temperature: float = 0.2,
     max_tokens: int = 1200,
     response_format: Optional[dict] = None,
 ) -> Optional[str]:
-    """Return the assistant message content, or None if Fireworks is unavailable."""
+    """Return the assistant message content, or None if Fireworks is unavailable.
+
+    `model` overrides the default so each agent can run on its best-fit model.
+    """
     if not settings.fireworks_enabled:
         return None
 
     payload = {
-        "model": settings.fireworks_model,
+        "model": model or settings.fireworks_model,
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": user},

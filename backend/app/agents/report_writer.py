@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 
 from app.agents import prompts
+from app.config import settings
 from app.models import Artifact, MigrationPlan, ScoreBreakdown, ValidationResult
 from app.services import fireworks_service
 
@@ -94,6 +95,7 @@ def write(
     raw = fireworks_service.complete(
         system=prompts.REPORT_WRITER,
         user="Data:\n" + json.dumps(payload, indent=2) + "\n\nReturn Markdown only.",
-        max_tokens=1500,
+        model=settings.report_model,
+        max_tokens=2800,
     )
     return _strip_doc_fence(raw) if raw else _fallback(source, plan, artifacts, validation, score)

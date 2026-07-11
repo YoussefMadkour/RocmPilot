@@ -124,4 +124,89 @@ SEED_DOCS: list[dict[str, str]] = [
                 "runs a real matmul on the device and prints PASS/FAIL.",
         "source": "RocmPilot playbook",
     },
+
+    # ---- Warp / wavefront (the hard 20%) ----
+    {
+        "text": "The single biggest kernel-porting hazard: NVIDIA warps are 32 threads, "
+                "AMD wavefronts are 64 (on CDNA / MI2xx/MI3xx). Any kernel that hardcodes "
+                "32, masks with 0xffffffff, or assumes a 32-lane reduction must be "
+                "re-derived for 64-wide wavefronts. hipify translates syntax but does NOT "
+                "fix this logic — it is manual.",
+        "source": "ROCm kernel porting: wavefront64",
+    },
+    {
+        "text": "__shfl_sync / __shfl_down_sync / __shfl_up_sync / __shfl_xor_sync exist "
+                "in HIP, but shuffle-based warp reductions written for 32 lanes give wrong "
+                "results on 64-lane wavefronts. Rewrite the reduction tree for 64 lanes, "
+                "or use rocPRIM/hipCUB block primitives instead of hand-rolled shuffles.",
+        "source": "ROCm kernel porting: warp shuffle",
+    },
+    {
+        "text": "Warp vote/ballot intrinsics (__ballot_sync, __any_sync, __all_sync, "
+                "__activemask) return a lane mask. On NVIDIA it is 32-bit; on AMD the "
+                "wavefront mask is 64-bit (unsigned long long). Code that stores a ballot "
+                "result in a 32-bit int or shifts by <32 will silently drop lanes 32-63.",
+        "source": "ROCm kernel porting: ballot/vote",
+    },
+    {
+        "text": "__syncwarp() has HIP support but warp-synchronous programming that relies "
+                "on 32-lane lockstep is fragile on 64-wide wavefronts. Prefer explicit "
+                "__syncthreads() at the block level or block-wide primitives.",
+        "source": "ROCm kernel porting: sync",
+    },
+
+    # ---- HIPIFY specifics ----
+    {
+        "text": "hipify-perl is a fast regex/sed translator (good for a first pass, may "
+                "miss edge cases); hipify-clang is AST-based and more accurate but needs a "
+                "working CUDA install to parse. Typical flow: hipify-perl kernel.cu > "
+                "kernel.hip, then fix residual warnings hipify emits as HIP_TODO comments.",
+        "source": "AMD HIPIFY: perl vs clang",
+    },
+    {
+        "text": "After hipify, compile with hipcc. Common residuals hipify cannot resolve: "
+                "warp-size assumptions, inline PTX asm (must be rewritten as HIP/GCN or "
+                "removed), __launch_bounds__ tuning, and library handles (cuBLAS handle -> "
+                "hipBLAS handle). These are the manual tail.",
+        "source": "AMD HIPIFY: residuals",
+    },
+    {
+        "text": "Inline PTX assembly (asm volatile with PTX) has NO automatic translation "
+                "to AMD GCN/RDNA ISA. hipify leaves it untouched and it will not compile. "
+                "Rewrite the intent in HIP C++ or with AMD GCN intrinsics — always manual.",
+        "source": "ROCm kernel porting: inline asm",
+    },
+
+    # ---- Library one-liners (retrieval-friendly) ----
+    {"text": "cuBLAS maps to hipBLAS (portability layer) or rocBLAS (native). For GEMM "
+             "autotuning use hipBLASLt. API is largely 1:1: cublasHandle_t -> hipblasHandle_t.",
+     "source": "ROCm libraries: BLAS"},
+    {"text": "cuDNN maps to MIOpen on ROCm. Not header-compatible; port cudnn* calls to "
+             "miopen* equivalents. PyTorch/TensorFlow ROCm builds already use MIOpen "
+             "internally, so high-level framework code needs no change.",
+     "source": "ROCm libraries: MIOpen"},
+    {"text": "NCCL maps to RCCL on ROCm, which is API-compatible (ncclAllReduce -> same "
+             "signature). Often just a link/library swap. Multi-GPU collectives work on "
+             "Infinity Fabric.",
+     "source": "ROCm libraries: RCCL"},
+    {"text": "cuFFT -> hipFFT/rocFFT; cuSPARSE -> hipSPARSE/rocSPARSE; cuRAND -> "
+             "hipRAND/rocRAND; cuSOLVER -> hipSOLVER/rocSOLVER; Thrust -> rocThrust "
+             "(near drop-in). CUB -> hipCUB / rocPRIM.",
+     "source": "ROCm libraries: map table"},
+    {"text": "CUTLASS has no drop-in ROCm port. For high-performance GEMM/conv on AMD "
+             "use Composable Kernel (CK) or hipBLASLt. This is a significant rewrite, not "
+             "a translation — budget engineering time.",
+     "source": "ROCm libraries: CUTLASS"},
+
+    # ---- Validation / deployment ----
+    {"text": "To run a ROCm container: docker run --device=/dev/kfd --device=/dev/dri "
+             "--group-add video --security-opt seccomp=unconfined <image>. Verify inside "
+             "with rocminfo (lists gfx arch) and python -c 'import torch; "
+             "print(torch.cuda.is_available(), torch.version.hip)'.",
+     "source": "ROCm deployment: container run"},
+    {"text": "PYTORCH_ROCM_ARCH pins the GPU target for source builds and some kernels: "
+             "gfx90a (MI200), gfx942 (MI300). A mismatch between the built arch and the "
+             "runtime GPU causes 'invalid device function' or 'operation cannot be "
+             "performed in the present state' errors.",
+     "source": "ROCm troubleshooting: arch"},
 ]

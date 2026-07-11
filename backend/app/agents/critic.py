@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from app.agents import json_utils, prompts
+from app.config import settings
 from app.models import ActionType, Critique, Finding, MigrationPlan, Severity
 from app.services import fireworks_service
 
@@ -51,8 +52,9 @@ def _llm_issues(plan: MigrationPlan, findings: list[Finding]) -> tuple[list[str]
             "\n\nProposed plan:\n" + plan.model_dump_json(indent=2) +
             '\n\nReturn JSON: {"approved": bool, "issues": [str], "notes": str}.'
         ),
+        model=settings.critic_model,
         response_format={"type": "json_object"},
-        max_tokens=600,
+        max_tokens=2000,  # room for reasoning before the JSON verdict
     )
     if not raw:
         return [], ""

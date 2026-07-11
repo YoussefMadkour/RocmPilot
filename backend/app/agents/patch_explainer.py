@@ -7,6 +7,7 @@ Fireworks is unavailable so the demo always shows an explanation.
 from __future__ import annotations
 
 from app.agents import prompts
+from app.config import settings
 from app.services import fireworks_service
 
 
@@ -21,7 +22,8 @@ def explain(original: str, patched: str, *, file_path: str = "") -> str:
             f"Proposed:\n{patched}\n\n"
             "Explain safety in 2-3 sentences."
         ),
-        max_tokens=300,
+        model=settings.explainer_model,
+        max_tokens=800,
     )
     if raw:
         return raw.strip()
