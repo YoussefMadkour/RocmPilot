@@ -177,9 +177,9 @@ export default function ScanPage() {
             No findings match these filters. Clear a filter to see the rest.
           </p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 max-h-[34rem] overflow-auto">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-panel">
                 <tr className="border-b border-edge font-mono text-[10px] uppercase tracking-widest text-ink-dim">
                   <th className="py-2 pr-4 font-normal">Severity</th>
                   <th className="py-2 pr-4 font-normal">Location</th>

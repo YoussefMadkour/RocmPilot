@@ -65,7 +65,7 @@ export function CockpitRail({ runId }: { runId?: string }) {
       aria-label="Run stages"
       className="shrink-0 rounded-xl border border-edge bg-panel p-3 md:w-52 md:p-4"
     >
-      <ol className="flex gap-1 overflow-x-auto md:flex-col md:gap-0.5">
+      <ol className="no-scrollbar flex gap-1 overflow-x-auto md:flex-col md:gap-0.5">
         {STAGES.map((s, i) => {
           const isIntake = s.segment === "";
           const href = isIntake ? "/" : runId ? `/runs/${runId}/${s.segment}` : null;
