@@ -98,28 +98,28 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 4 — Report + polish + ship
+## Phase 4 — Report + polish + ship  🟢 (acceptance verified on a fresh clone)
 **Backend [Y]**
 - [x] Report Writer prompt produces a judge-ready report from real data — sharpened prompt (6 sections, honest replay labeling, ROCm nuance), richer fallback (failure diagnosis + replay note), and `readiness_report.md` now registered as an artifact so `artifacts.zip` includes it (PR #14, 6 tests)
 
 **Frontend [J]**
 - [x] **Report** screen: before/after score comparison, rendered Markdown, artifact list, download report — plus consumed the new agent APIs: real trace + Critic review on Plan, Patch Explainer panel on Patch, `replay_fail` badge fix on Validate (feat/agent-ui)
-- [ ] Visual polish pass (dark cockpit, consistent spacing/badges)
+- [x] Visual polish pass — sticky findings-table header (yolov5 stress-tested), scrollbar-free mobile rail, all six screens verified at 375px with zero horizontal overflow
 
 **Infra [J]**
-- [ ] Verify clean `docker compose up --build` from scratch on a fresh clone
-- [ ] Optional: GitHub Actions (lint backend + build frontend)
+- [x] Verify clean `docker compose up --build` from scratch on a fresh clone — both images build, full flow (create→…→report + artifacts.zip) runs through the containers with zero env config; UI click-to-scan verified against the containerized stack
+- [x] GitHub Actions CI: pytest (py3.12) + next build (node 22) on push/PR to dev/main
 
 **Acceptance:**
-- Full flow runs in the UI in < 3 minutes on a fresh clone.
-- Report downloads; before/after score visible.
+- Full flow runs in the UI in < 3 minutes on a fresh clone. ✅ (API flow < 1s offline; UI click-through seconds)
+- Report downloads; before/after score visible. ✅
 
 ---
 
 ## Phase 5 — Submission
 - [ ] [Y] Record 3-min demo (follow `docs/DEMO_SCRIPT.md`)
 - [ ] [Y] Submission write-up + positioning
-- [ ] [J] Screenshots + README setup polish
+- [x] [J] Screenshots + README setup polish (`docs/screenshots/`, gallery + verified offline quick start in README)
 - [ ] [Both] Dry-run the demo twice; fix anything that stutters
 
 ---

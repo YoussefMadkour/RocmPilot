@@ -30,6 +30,15 @@ run on AMD. RocmPilot removes that friction.
 4. **Validate** — runs (or replays a saved) AMD/ROCm smoke test + benchmark.
 5. **Report** — a ROCm readiness score (before → after) and an exportable report.
 
+## The cockpit
+
+| | |
+|---|---|
+| ![Scan — findings table with severity/category filters](docs/screenshots/02-scan.png) | ![Plan — multi-agent plan with Critic review](docs/screenshots/03-plan.png) |
+| **Scan** — deterministic findings, filterable | **Plan** — Planner + Critic, real agent trace |
+| ![Validate — AMD validation card with replay badge](docs/screenshots/04-validate.png) | ![Report — score journey and readiness report](docs/screenshots/05-report.png) |
+| **Validate** — MI300X evidence, honestly labeled | **Report** — 37 → 72 → 86 and the exportable debrief |
+
 ## Where AMD & Fireworks show up
 
 - **AMD/ROCm:** generated ROCm Dockerfile, smoke test, benchmark, and a real
@@ -50,10 +59,12 @@ operators are **flagged for manual review**, not auto-solved.
 ## Quick start
 
 ```bash
-cp .env.example .env          # add FIREWORKS_API_KEY (optional — runs without it)
+cp .env.example .env          # optional — every key is optional, it runs fully offline
 docker compose up --build     # backend :8000, frontend :3000
 ```
-Open http://localhost:3000 and click **Scan sample CUDA-first repo**.
+Open http://localhost:3000 and click **Scan the bundled CUDA-first sample repo**.
+No API keys needed: with no `FIREWORKS_API_KEY` the agents fall back to
+deterministic output and the full flow still completes end to end.
 
 ### Run the pieces without Docker
 
@@ -100,7 +111,7 @@ FOR_YOUSSEF.md       status handoff + open [Y] work + improvement ideas
 ```bash
 cd backend
 source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pytest                        # 32 tests, all deterministic (no network, no LLM)
+pytest                        # 124 tests, all deterministic (no network, no LLM)
 ```
 
 ## Team
