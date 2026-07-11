@@ -1,5 +1,35 @@
 # Hey Jithendra 👋 — start here
 
+> ## ⬆️ Update from Youssef (2026-07-11) — the AI layer grew a lot; here's what touches your UI
+>
+> All merged to `main`, 152 tests green. New API fields (all additive) for you to render:
+> - **`POST /plan`** now returns `{plan, critique, trace}`. `trace` is the real
+>   **agent-activity timeline** (orchestrator → planner → critic) — wire your Plan
+>   screen's timeline to it. `critique` = `{approved, issues[], notes}` (show an
+>   "independent review ✓/✗" badge). It's a **multi-model orchestra**: DeepSeek
+>   plans, **GLM critiques** (different model on purpose), Kimi researches.
+> - **`POST /patch`** returns `explanations[]` (`{file_path, line_number, original,
+>   patched, explanation}`) — a "why this patch is safe" panel per changed file.
+> - **`ValidationResult`** now has `diagnosis` (cited, RAG-grounded, Markdown) and a
+>   new `mode: "replay_fail"`. Your failure panel already renders `diagnosis` — set
+>   `VALIDATION_MODE=replay_fail` to demo it.
+> - **Scanner** now flags the **hard 20%**: warp/wavefront-64, WMMA, CUTLASS, CUDA
+>   libraries. They arrive as normal findings (category `manual_blocker` /
+>   `cuda_dependency`) with AMD-specific text — your findings table shows them as-is,
+>   but a "kernel risk" filter/badge would pop.
+> - **Scoring is honest** now (nanoGPT ~67, sample 37→72→86) — your score cards
+>   already handle the range; just don't hardcode 37.
+>
+> **AMD demo + setup:** see `docs/AMD_SETUP.md` (where AMD fits, how to capture a real
+> MI300X run, live vs replay). **Pitch/story:** `PITCH.md`. **Contract:** always the
+> source of truth in `docs/API_CONTRACT.md`.
+>
+> **Your open [J]:** Report screen, visual polish, clean `docker compose up --build`
+> verify, optional CI. And when you want to pair: `GET /api/runs/{id}` (single-run
+> fetch) so revisiting a screen doesn't re-POST.
+>
+> ---
+
 Welcome to **RocmPilot Studio**, our AMD hackathon project. I've scaffolded the
 whole thing so you're not staring at an empty repo — it already runs end to end.
 This doc is how we'll work together and what's yours to own.

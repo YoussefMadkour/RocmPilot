@@ -1,15 +1,18 @@
 # RocmPilot Studio
 
-**AI migration & validation cockpit for AMD GPU readiness.**
+**The migration command center that takes a CUDA-first repo to an AMD-ready,
+validated deployment — in minutes.**
 
-> Most AI repos are CUDA-first. RocmPilot Studio helps developers take a CUDA-first
-> PyTorch inference repo and turn it into an AMD/ROCm-ready container — by scanning
-> blockers, generating safe patches, validating on AMD infrastructure, and
-> producing a ROCm readiness score.
+> Point it at a repository URL. It returns an honest AMD-readiness verdict, a
+> prioritized migration plan, safe auto-patches, a ready-to-run ROCm container, a
+> real validation on AMD hardware, and a before→after readiness score — end to end.
 
-Built for the **AMD Developer Hackathon: ACT II**, Track 3 (Unicorn). Uses the
-**Fireworks AI API** for reasoning agents and **AMD Developer Cloud / ROCm** for
-validation. Fully containerized.
+📄 **Read [`PITCH.md`](PITCH.md) for the story, the tech decisions, and the results.**
+
+Built for the **AMD Developer Hackathon: ACT II**, Track 3 (Unicorn). A
+**multi-model agent orchestra** (all AMD-hosted via **Fireworks AI**) plus a
+ROCm/HIP **knowledge base (RAG)**, validated on **AMD Developer Cloud / MI300X**.
+Fully containerized.
 
 ---
 
@@ -23,21 +26,30 @@ run on AMD. RocmPilot removes that friction.
 ## What it does
 
 1. **Scan** a repo (GitHub URL or the bundled sample) — deterministic detection of
-   CUDA/NVIDIA blockers with file, line, severity, and category.
-2. **Plan** — a Fireworks agent turns findings into a prioritized migration plan.
+   CUDA/NVIDIA blockers with file, line, severity, and category, plus a
+   **kernel-risk classifier** for the hard tail: warp/wavefront-64 hazards
+   (`__shfl`, `__ballot`, `warpSize`), WMMA tensor cores, CUTLASS, texture memory,
+   and CUDA libraries mapped to their ROCm twins (cuBLAS→hipBLAS, NCCL→RCCL, …).
+2. **Plan** — a multi-agent orchestra drafts a prioritized plan, then a **second,
+   different model critiques it** before you see it (independent review).
 3. **Patch** — generates `patch.diff`, `Dockerfile.rocm`, `smoke_test.py`,
-   `benchmark.py`.
-4. **Validate** — runs (or replays a saved) AMD/ROCm smoke test + benchmark.
-5. **Report** — a ROCm readiness score (before → after) and an exportable report.
+   `benchmark.py`, each patch explained in plain English from the real diff.
+4. **Validate** — runs (or replays a labeled saved) AMD/ROCm smoke test +
+   benchmark on MI300X; on failure a **research agent** returns a *cited* fix.
+5. **Report** — an honest ROCm readiness score (before → after → validated) and an
+   exportable report.
 
 ## Where AMD & Fireworks show up
 
 - **AMD/ROCm:** generated ROCm Dockerfile, smoke test, benchmark, and a real
-  validation run on AMD Developer Cloud (replayable for demo safety, always
-  labeled). See the AMD validation card in the UI.
-- **Fireworks AI:** powers the four reasoning agents (planner, patch explainer,
-  failure diagnoser, report writer). Deterministic detection stays in Python — the
-  LLM only reasons and explains. See `docs/ARCHITECTURE.md`.
+  validation run on AMD Developer Cloud / MI300X (replayable for demo safety,
+  always labeled). The kernel-risk classifier speaks AMD (wavefront64, rocWMMA,
+  Composable Kernel, hipBLAS/MIOpen/rocFFT/RCCL).
+- **Fireworks AI (multi-model, all AMD-hosted):** DeepSeek-v4-pro plans, GLM-5.2
+  critiques and writes, Kimi-k2.6 researches failures, `nomic-embed-text` powers
+  the RAG knowledge base. Deterministic detection stays in Python — the LLM only
+  reasons and explains, always with a deterministic fallback. See
+  `docs/ARCHITECTURE.md`.
 
 ## What it does **not** do
 
@@ -75,12 +87,19 @@ npm run dev                             # http://localhost:3000
 
 | Var | Purpose | Default |
 |-----|---------|---------|
-| `FIREWORKS_API_KEY` | Enables the reasoning agents (falls back offline if unset) | — |
-| `FIREWORKS_MODEL` | Fireworks model id | llama-v3p1-70b-instruct |
-| `VALIDATION_MODE` | `replay` (demo-safe) or `live` | replay |
+| `FIREWORKS_API_KEY` | Enables the reasoning agents + embeddings (falls back offline if unset) | — |
+| `FIREWORKS_MODEL` | Default Fireworks model id | deepseek-v4-pro |
+| `PLANNER/CRITIC/RESEARCH/REPORT/EXPLAINER_MODEL` | Per-agent model overrides | see `config.py` |
+| `FIREWORKS_EMBEDDING_MODEL` | Embedding model for RAG | nomic-embed-text-v1.5 |
+| `QDRANT_URL` / `QDRANT_API_KEY` | ROCm/HIP knowledge base (RAG). Blank → agents run without retrieval | — |
+| `TAVILY_API_KEY` | Optional web research for the self-heal agent | — |
+| `VALIDATION_MODE` | `replay` / `replay_fail` (demo modes) or `live` | replay |
 | `AMD_VALIDATION_LOG_PATH` | Saved AMD run for replay mode | fixtures/validation_log.txt |
 | `GITHUB_TOKEN` | Clone private repos (optional) | — |
 | `NEXT_PUBLIC_API_BASE_URL` | Frontend → backend URL | http://localhost:8000 |
+
+> After setting `FIREWORKS_API_KEY` + Qdrant, build the knowledge base once:
+> `cd backend && python -m app.knowledge.ingest`
 
 ## Repository layout
 
@@ -100,7 +119,7 @@ FOR_YOUSSEF.md       status handoff + open [Y] work + improvement ideas
 ```bash
 cd backend
 source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pytest                        # 32 tests, all deterministic (no network, no LLM)
+pytest                        # 152 tests, all deterministic (no network, no LLM)
 ```
 
 ## Team

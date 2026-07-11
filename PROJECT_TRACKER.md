@@ -120,10 +120,19 @@ and teach the codebase without gating the AI path.
 ---
 
 ## Phase 5 — Submission
+- [x] [Y] Submission write-up + positioning — `PITCH.md` (problem/solution/tech+decisions/results, command-center framing) (PR #20)
+- [x] [Y] Refresh `README.md` + `docs/DEMO_SCRIPT.md` for the current multi-model / RAG / kernel-risk pipeline (PR #20)
+- [x] [Y] `docs/AMD_SETUP.md` + `scripts/capture_amd_run.sh` — where AMD fits (models on AMD via Fireworks · MI300X validation · ROCm artifacts) and how to run/capture (PR #20)
+- [ ] [Y] Capture a real MI300X run into `fixtures/` (run `scripts/capture_amd_run.sh` on the AMD box)
 - [ ] [Y] Record 3-min demo (follow `docs/DEMO_SCRIPT.md`)
-- [ ] [Y] Submission write-up + positioning
 - [ ] [J] Screenshots + README setup polish
 - [ ] [Both] Dry-run the demo twice; fix anything that stutters
+
+## AI enhancements (beyond original scope)
+- [x] Multi-model agent orchestra (DeepSeek plan · GLM critique · Kimi research · nomic embeddings — all AMD-hosted via Fireworks); independent-model critic (PR #19)
+- [x] RAG knowledge base: curated ROCm/HIP corpus in Qdrant, fallback-safe (PRs #16, #19)
+- [x] Research/self-heal agent — cited, RAG-grounded failure diagnosis (PR #17)
+- [x] Kernel-risk classifier — warp/wavefront + CUDA-library hazards at repo scale (PR #18)
 
 ---
 
