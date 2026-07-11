@@ -40,11 +40,11 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 1 — Core loop solid  🟡 (all [J] tasks done + verified; [Y] tasks open)
+## Phase 1 — Core loop solid  🟡 ([J] done; [Y] mostly done — scanner polish open)
 **Backend [Y]**
-- [ ] Harden `repo_service.clone_repo` (URL validation, size/time limits, private via `GITHUB_TOKEN`)
-- [ ] Expand scanner pattern catalogue; unit-test each category
-- [ ] Lock scoring weights against 3 real repos (nanoGPT, YOLOv5, Real-ESRGAN)
+- [x] Harden `repo_service.clone_repo` — scheme/host allowlist, SSRF guard, size/time limits, `GITHUB_TOKEN` + redaction (PR #2, 29 tests)
+- [ ] Expand scanner pattern catalogue; unit-test each category — Jith added 6 patterns; [Y] polish still open: dedupe duplicate rows per line, downweight `.md`/docs findings, point `.cu` blockers at HIPIFY
+- [x] Lock scoring weights against 3 real repos — **rebuilt honest, count-sensitive model** (PR #3, 17 tests); see `docs/BENCHMARK_REPOS.md` + scoring decision
 
 **Backend [J] backend** (ramp-up tasks)
 - [x] Add ≥5 new patterns to `scanner_service.PATTERNS` (added 6: `pin_memory`, `torch.backends.cudnn`, `torch.backends.cuda`/TF32, `apex`, `bitsandbytes`, `flash-attn`) with a test each
@@ -62,10 +62,11 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 2 — Scan + Plan  🟡 (all [J] tasks done + verified; [Y] tasks open)
+## Phase 2 — Scan + Plan  🟢 ([J] + [Y] done)
 **Backend [Y]**
-- [ ] Tune Migration Planner prompt against real findings; verify JSON validity
-- [ ] Patch Explainer wired to real snippets
+- [x] Tune Migration Planner prompt + harden JSON validity (fenced/prose recovery, enum guard) (PR #5, 15 tests)
+- [x] Patch Explainer wired to real changed snippets, surfaced in `PatchResponse` (PR #7, 7 tests)
+- [x] **Bonus:** code-first multi-agent Orchestrator + Critic with agent-activity `trace` on `POST /plan` (PR #8)
 
 **Frontend [J]**
 - [x] **Scan** screen: readiness score card, findings table (severity badges, file:line, category filter), findings-by-category summary
@@ -77,11 +78,11 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 3 — Patch + Validate  🟡 (all [J] tasks done + verified; [Y] tasks open)
+## Phase 3 — Patch + Validate  🟡 ([J] done; [Y] mostly done — live validation open)
 **Backend [Y]**
-- [ ] Improve patch transforms (model `.cuda()`, `.to("cuda")` → resolved device)
+- [x] Improve patch transforms — now guards `.cuda()`, `.to("cuda")`, `torch.device("cuda")`; conservative + idempotent (PR #10, +5 tests)
 - [ ] Implement `live` validation mode (build `Dockerfile.rocm`, run smoke+bench, parse logs)
-- [ ] Wire Failure Diagnoser into the validate path on failure (UI panel is already waiting for it)
+- [x] Wire Failure Diagnoser into the validate path on failure + `VALIDATION_MODE=replay_fail` demo mode; UI panel renders `validation.diagnosis` (PR #9, 4 tests)
 
 **Backend [J] backend**
 - [x] Refine the three templates so generated artifacts run clean on ROCm (CUDA-wheel filtering in Dockerfile, parseable PASS/FAIL + `--require-gpu` in smoke test, TFLOPS in benchmark)
@@ -132,9 +133,13 @@ and teach the codebase without gating the AI path.
 | [xinntao/Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) | **Most visual** (before/after image upscaling); great for judges. | fp16 GPU inference, `--gpu-id`, `half=` |
 | [openai/whisper](https://github.com/openai/whisper) | Household name; audio angle. Note: already has a CPU fallback, so fewer hard blockers — use as a "already partly ready" contrast. | `default="cuda" if torch.cuda.is_available() else "cpu"` |
 
-Recommendation: demo with **nanoGPT** (clean, believable score jump) and keep
-**Real-ESRGAN** as the "wow, it's visual" backup. YOLOv5 is the strongest
-Docker-blocker story.
+Recommendation (updated for **honest scoring** — see `docs/BENCHMARK_REPOS.md`):
+**lead the demo with the bundled sample** (37 → 72 → 86; it hits every blocker
+category). Real repos are honest proof, not forced-low: nanoGPT ~67, Real-ESRGAN
+~65, YOLOv5 ~55 "before" (ROCm maps `cuda` transparently, so clean repos really
+are closer to ready). Use **YOLOv5** for the strongest real Docker-blocker story
+and **Real-ESRGAN** as the visual "wow." Custom-kernel repos (detectron2 ~12,
+flash-attention ~17) are the honest low end / Tier-2 backlog.
 
 ---
 
