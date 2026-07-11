@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { api, type Artifact } from "@/lib/api";
+import { api, type Artifact, type PatchExplanation } from "@/lib/api";
 
 function DiffView({ text }: { text: string }) {
   return (
@@ -30,6 +30,7 @@ function DiffView({ text }: { text: string }) {
 export default function PatchPage() {
   const { id } = useParams<{ id: string }>();
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [explanations, setExplanations] = useState<PatchExplanation[]>([]);
   const [contents, setContents] = useState<Record<string, string>>({});
   const [active, setActive] = useState<string>("patch.diff");
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function PatchPage() {
       .patch(id)
       .then(async (res) => {
         setArtifacts(res.artifacts);
+        setExplanations(res.explanations ?? []);
         const loaded = await Promise.all(
           res.artifacts.map((a) =>
             api.artifact(id, a.name).then((r) => [a.name, r.content] as const),
@@ -164,6 +166,30 @@ export default function PatchPage() {
           )}
         </div>
       </section>
+
+      {/* Patch Explainer — per-change safety notes, grounded in the real diff */}
+      {explanations.length > 0 && (
+        <section className="rounded-xl border border-edge bg-panel p-6">
+          <p className="font-mono text-[11px] tracking-widest text-ink-dim">
+            PATCH EXPLAINER · WHY THESE CHANGES ARE SAFE
+          </p>
+          <ul className="mt-4 space-y-4">
+            {explanations.map((ex, i) => (
+              <li key={i} className="border-b border-edge/50 pb-4 last:border-b-0 last:pb-0">
+                <p className="font-mono text-xs text-ink-dim">
+                  {ex.file_path}
+                  <span className="text-ink">:{ex.line_number}</span>
+                </p>
+                <div className="mt-2 overflow-x-auto rounded-lg border border-edge bg-bay p-3 font-mono text-xs leading-relaxed">
+                  <div className="text-crit">- {ex.original}</div>
+                  <div className="text-ready">+ {ex.patched}</div>
+                </div>
+                <p className="mt-2 text-sm text-ink-dim">{ex.explanation}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

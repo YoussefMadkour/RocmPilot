@@ -80,13 +80,14 @@ export default function ValidatePage() {
             >
               {validation.status.replace("_", " ")}
             </span>
-            {validation.mode === "replay" ? (
-              <span className="rounded-full border border-ember/40 bg-ember/10 px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-ember">
-                Saved AMD run · replay
-              </span>
-            ) : (
+            {validation.mode === "live" ? (
               <span className="rounded-full border border-edge px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-ink-dim">
                 live run
+              </span>
+            ) : (
+              // Covers replay AND replay_fail — a saved run must always say so.
+              <span className="rounded-full border border-ember/40 bg-ember/10 px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-ember">
+                Saved AMD run · replay
               </span>
             )}
           </div>
@@ -98,7 +99,7 @@ export default function ValidatePage() {
           )}
         </div>
 
-        {validation.mode === "replay" && (
+        {validation.mode !== "live" && (
           <p className="mt-2 text-xs text-ink-dim">
             This result was captured on AMD hardware and replayed for demo
             reliability — it is not executing live right now.
@@ -171,7 +172,7 @@ export default function ValidatePage() {
         <div className="flex items-center justify-between border-b border-edge bg-panel px-4 py-2">
           <p className="font-mono text-[11px] text-ink-dim">validation_log.txt</p>
           <p className="font-mono text-[10px] uppercase tracking-widest text-ink-dim">
-            {validation.mode === "replay" ? "saved amd run" : "live output"}
+            {validation.mode === "live" ? "live output" : "saved amd run"}
           </p>
         </div>
         <pre className="max-h-96 overflow-y-auto bg-[#0D0A0C] p-4 font-mono text-xs leading-relaxed text-ink-dim">

@@ -1,18 +1,26 @@
 "use client";
 
-// 03 · Plan — the Migration Planner agent turns scan findings into a
-// prioritized plan. Renders identically with or without a Fireworks key
-// (the backend falls back to a deterministic plan).
+// 03 · Plan — the Orchestrator runs the Migration Planner, then a Critic agent
+// reviews the plan against the raw findings. Everything shown here is real
+// agent output: the trace drives the activity timeline, the critique gets its
+// own panel. Renders identically with or without a Fireworks key.
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { api, type MigrationPlan } from "@/lib/api";
+import {
+  api,
+  type AgentEvent,
+  type Critique,
+  type MigrationPlan,
+} from "@/lib/api";
 import { ActionTypeTag, SeverityBadge } from "@/components/badges";
 
 export default function PlanPage() {
   const { id } = useParams<{ id: string }>();
   const [plan, setPlan] = useState<MigrationPlan | null>(null);
+  const [critique, setCritique] = useState<Critique | null>(null);
+  const [trace, setTrace] = useState<AgentEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
@@ -21,7 +29,11 @@ export default function PlanPage() {
     started.current = true; // avoid double-POST from React strict mode
     api
       .plan(id)
-      .then((res) => setPlan(res.plan))
+      .then((res) => {
+        setPlan(res.plan);
+        setCritique(res.critique);
+        setTrace(res.trace);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : "Planning failed"));
   }, [id]);
 
@@ -47,17 +59,10 @@ export default function PlanPage() {
         <h1 className="font-display text-2xl font-semibold">Plan</h1>
         <p className="mt-3 font-mono text-sm text-ink-dim">
           <span className="led-pulse mr-2 inline-block h-2 w-2 rounded-full bg-ember" />
-          Migration Planner is reasoning over the findings…
+          Orchestrating: Planner is drafting, Critic will review…
         </p>
       </section>
     );
-
-  const activity = [
-    "Scan findings handed to the Migration Planner",
-    `Planner returned ${plan.actions.length} prioritized action${plan.actions.length === 1 ? "" : "s"}`,
-    `${plan.manual_blockers.length} finding${plan.manual_blockers.length === 1 ? "" : "s"} flagged for manual review`,
-    "Plan validated against the API contract",
-  ];
 
   return (
     <div className="space-y-4">
@@ -123,27 +128,80 @@ export default function PlanPage() {
           )}
         </section>
 
-        {/* Agent activity */}
+        {/* Critic review */}
         <section className="rounded-xl border border-edge bg-panel p-6">
-          <h2 className="font-display text-sm font-semibold tracking-wide">
-            Agent activity
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-sm font-semibold tracking-wide">
+              Critic review
+            </h2>
+            {critique && (
+              <span
+                className={`rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+                  critique.approved
+                    ? "border-ready/40 bg-ready/10 text-ready"
+                    : "border-ember/40 bg-ember/10 text-ember"
+                }`}
+              >
+                {critique.approved ? "approved" : "issues raised"}
+              </span>
+            )}
+          </div>
+          {critique ? (
+            <>
+              {critique.notes && (
+                <p className="mt-3 text-sm text-ink-dim">{critique.notes}</p>
+              )}
+              {critique.issues.length > 0 && (
+                <ul className="mt-3 space-y-2">
+                  {critique.issues.map((issue, i) => (
+                    <li key={i} className="flex gap-2 text-xs">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-ember" aria-hidden />
+                      <span className="text-ink-dim">{issue}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-ink-dim">No critique returned.</p>
+          )}
+        </section>
+      </div>
+
+      {/* Agent activity — the real orchestration trace */}
+      <section className="rounded-xl border border-edge bg-panel p-6">
+        <h2 className="font-display text-sm font-semibold tracking-wide">
+          Agent activity
+        </h2>
+        {trace.length === 0 ? (
+          <p className="mt-3 text-sm text-ink-dim">No trace returned.</p>
+        ) : (
           <ol className="mt-4 space-y-0">
-            {activity.map((step, i) => (
-              <li key={step} className="relative flex gap-3 pb-4 last:pb-0">
-                {i < activity.length - 1 && (
+            {trace.map((e, i) => (
+              <li key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                {i < trace.length - 1 && (
                   <span
                     className="absolute left-[3px] top-3 h-full w-px bg-edge"
                     aria-hidden
                   />
                 )}
-                <span className="relative mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full bg-ready" aria-hidden />
-                <span className="text-xs text-ink-dim">{step}</span>
+                <span
+                  className={`relative mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full ${
+                    e.ok ? "bg-ready" : "bg-ember"
+                  }`}
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <span className="mr-2 rounded border border-edge px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ink-dim">
+                    {e.agent}
+                  </span>
+                  <span className="text-xs text-ink-dim">{e.message}</span>
+                </div>
               </li>
             ))}
           </ol>
-        </section>
-      </div>
+        )}
+      </section>
     </div>
   );
 }
