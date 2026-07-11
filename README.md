@@ -11,7 +11,7 @@ validated deployment — in minutes.**
 
 Built for the **AMD Developer Hackathon: ACT II**, Track 3 (Unicorn). A
 **multi-model agent orchestra** (all AMD-hosted via **Fireworks AI**) plus a
-ROCm/HIP **knowledge base (RAG)**, validated on **AMD Developer Cloud / MI300X**.
+ROCm/HIP **knowledge base (RAG)**, validated on **AMD Developer Cloud (Radeon gfx1100 / MI300-class)**.
 Fully containerized.
 
 ---
@@ -35,14 +35,14 @@ run on AMD. RocmPilot removes that friction.
 3. **Patch** — generates `patch.diff`, `Dockerfile.rocm`, `smoke_test.py`,
    `benchmark.py`, each patch explained in plain English from the real diff.
 4. **Validate** — runs (or replays a labeled saved) AMD/ROCm smoke test +
-   benchmark on MI300X; on failure a **research agent** returns a *cited* fix.
+   benchmark on the AMD GPU; on failure a **research agent** returns a *cited* fix.
 5. **Report** — an honest ROCm readiness score (before → after → validated) and an
    exportable report.
 
 ## Where AMD & Fireworks show up
 
 - **AMD/ROCm:** generated ROCm Dockerfile, smoke test, benchmark, and a real
-  validation run on AMD Developer Cloud / MI300X (replayable for demo safety,
+  validation run on AMD Developer Cloud (Radeon gfx1100 / MI300-class) (replayable for demo safety,
   always labeled). The kernel-risk classifier speaks AMD (wavefront64, rocWMMA,
   Composable Kernel, hipBLAS/MIOpen/rocFFT/RCCL).
 - **Fireworks AI (multi-model, all AMD-hosted):** DeepSeek-v4-pro plans, GLM-5.2

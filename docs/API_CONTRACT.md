@@ -85,7 +85,7 @@ from this instead of re-running the step.
 ```json
 {
   "status": "passed", "mode": "replay", "rocm_detected": true, "hip_available": true,
-  "pytorch_rocm_build": "2.4.0+rocm6.2", "gpu_name": "AMD Instinct MI300X",
+  "pytorch_rocm_build": "2.9.1+gitff65f5b", "gpu_name": "AMD Radeon (gfx1100)",
   "smoke_test_passed": true, "benchmark_passed": true,
   "inference_latency_ms": 12.4, "logs": "...", "diagnosis": null, "diagnosis_model": null
 }

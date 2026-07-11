@@ -123,7 +123,7 @@ and teach the codebase without gating the AI path.
 - [x] [Y] Submission write-up + positioning — `PITCH.md` (problem/solution/tech+decisions/results, command-center framing) (PR #20)
 - [x] [Y] Refresh `README.md` + `docs/DEMO_SCRIPT.md` for the current multi-model / RAG / kernel-risk pipeline (PR #20)
 - [x] [Y] `docs/AMD_SETUP.md` + `scripts/capture_amd_run.sh` — where AMD fits (models on AMD via Fireworks · MI300X validation · ROCm artifacts) and how to run/capture (PR #20)
-- [ ] [Y] Capture a real MI300X run into `fixtures/` (run `scripts/capture_amd_run.sh` on the AMD box)
+- [x] [Y] Capture a real AMD run into `fixtures/` — smoke test PASSED on a Radeon gfx1100 (RDNA3), ROCm 7.2, PyTorch 2.9.1, ~0.84ms inference (via `scripts/amd_capture.ipynb`)
 - [ ] [Y] Record 3-min demo (follow `docs/DEMO_SCRIPT.md`)
 - [ ] [J] Screenshots + README setup polish
 - [ ] [Both] Dry-run the demo twice; fix anything that stutters

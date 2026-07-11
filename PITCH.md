@@ -38,7 +38,7 @@ containerize → validate on AMD → score → report.
 
 ```
 Repo URL ─▶ SCAN ─▶ PLAN ─▶ PATCH ─▶ VALIDATE ─▶ REPORT
-          (deterministic  (multi-agent  (auto-fix +   (real MI300X   (readiness
+          (deterministic  (multi-agent  (auto-fix +   (real AMD GPU   (readiness
            + kernel-risk    orchestra +   ROCm         run, or        score +
            classifier)      RAG)          container)   labeled replay) export)
 ```
@@ -57,9 +57,10 @@ Repo URL ─▶ SCAN ─▶ PLAN ─▶ PATCH ─▶ VALIDATE ─▶ REPORT
 - **Patch** — generates a `patch.diff` (safe device-handling rewrites), a
   `Dockerfile.rocm`, a ROCm smoke test, and a benchmark — each patch explained in
   plain English, grounded in the exact changed lines.
-- **Validate** — builds and runs the smoke test + benchmark on **real AMD (MI300X)
-  hardware**; when a run fails, a **research agent** investigates and returns a
-  *cited* root cause and fix.
+- **Validate** — builds and runs the smoke test + benchmark on **real AMD GPU
+  hardware** (validated on a Radeon gfx1100 / RDNA3 via AMD's cloud; the same path
+  targets Instinct MI300X); when a run fails, a **research agent** investigates and
+  returns a *cited* root cause and fix.
 - **Report** — a judge-ready Markdown report and a single readiness number that
   actually means something.
 
@@ -75,8 +76,9 @@ Repo URL ─▶ SCAN ─▶ PLAN ─▶ PATCH ─▶ VALIDATE ─▶ REPORT
 
 ## Results
 
-- **Real AMD validation** on MI300X via AMD Developer Cloud (smoke test + benchmark;
-  replay is always labeled as a saved run — never faked).
+- **Real AMD validation** on AMD Developer Cloud — smoke test **passed** on a
+  Radeon gfx1100 (RDNA3), ROCm 7.2, PyTorch 2.9.1, ~0.84 ms inference; replay is
+  always labeled as a saved run — never faked.
 - **Honest readiness across a spectrum** we measured on real repos:
 
   | Repo | "before" | Why |
@@ -90,7 +92,7 @@ Repo URL ─▶ SCAN ─▶ PLAN ─▶ PATCH ─▶ VALIDATE ─▶ REPORT
 - **Live agent quality:** on a failed warp-reduction kernel, the research agent
   correctly identified the 32→64 wavefront divergence, recommended a 64-lane
   rewrite (or rocPRIM/hipCUB), and cited its ROCm sources — high confidence, ~26s.
-- **152 automated tests**, deterministic and offline; the live path verified end
+- **159 automated tests**, deterministic and offline; the live path verified end
   to end.
 
 ## Why it wins
@@ -99,7 +101,7 @@ RocmPilot answers the question enterprises actually start with — *"can my code
 move to AMD, how hard is it, and can you get it running?"* — and then does the
 getting-it-running. It combines **repo-scale triage**, a **precisely-scoped hard
 20%**, a **multi-model, RAG-grounded agent orchestra**, **one-stop ROCm
-packaging**, and **real MI300X validation** into a single, honest cockpit.
+packaging**, and **real AMD-GPU validation** into a single, honest cockpit.
 
 It doesn't just port code. It removes the *uncertainty* that keeps enterprises on
 CUDA — which is the actual blocker to AMD adoption.

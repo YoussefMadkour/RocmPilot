@@ -8,7 +8,7 @@ RocmPilot touches AMD in **three** layers, not one:
    whole agent orchestra is AMD-accelerated inference.
 2. **Validation runs on real AMD hardware.** The generated `Dockerfile.rocm`
    (rocm/pytorch base), `smoke_test.py`, and `benchmark.py` build and execute on an
-   **AMD MI300X via AMD Developer Cloud**. This is the hardware proof.
+   **a real AMD GPU via AMD Developer Cloud** (Radeon gfx1100 in the hackathon notebook; Instinct MI300X on Instinct hosts). This is the hardware proof.
 3. **The output targets ROCm.** Patches, the ROCm container, and the kernel-risk
    classifier (wavefront64, HIPIFY, rocWMMA, hipBLAS/MIOpen/rocFFT/RCCL) all speak
    AMD/ROCm.
@@ -31,9 +31,9 @@ Without a key the pipeline still runs (deterministic fallbacks) — you just don
 get the live LLM reasoning.
 
 ### 2. AMD Developer Cloud (the real GPU) — for validation
-Provision an MI300X instance with ROCm + Docker. Confirm the GPU is visible:
+Provision an AMD GPU instance (Radeon or Instinct) with ROCm. Confirm the GPU is visible:
 ```bash
-rocminfo | grep -i "Marketing Name"     # -> AMD Instinct MI300X
+rocminfo | grep -i "Marketing Name"     # -> your AMD GPU (e.g. Radeon gfx1100 or Instinct MI300X)
 python -c "import torch; print(torch.cuda.is_available(), torch.version.hip)"
 ```
 
@@ -56,7 +56,7 @@ It only needs `torch`, runs the same smoke test + benchmark, and writes
 `validation_log.txt` + `benchmark.json` in RocmPilot's exact format.
 
 Either way, copy the two files into `backend/app/fixtures/` and commit them; the
-Validate screen's `replay` then shows genuine MI300X numbers (always labeled as a
+Validate screen's `replay` then shows genuine AMD-GPU numbers (always labeled as a
 saved run — we never fake it).
 
 ### B. Live mode (end-to-end on the AMD host)

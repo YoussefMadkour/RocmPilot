@@ -1,8 +1,11 @@
 {
   "device": "cuda",
-  "gpu_name": "AMD Instinct MI300X",
-  "pytorch_build": "2.4.0+rocm6.2",
-  "load_ms": 41.7,
-  "inference_latency_ms": 12.4,
-  "runs": 50
+  "gpu_name": "AMD Radeon (gfx1100)",
+  "pytorch_build": "2.9.1+gitff65f5b",
+  "hip_version": "7.2.53211-e1a6bc5663",
+  "load_ms": 0.325,
+  "inference_latency_ms": 0.838,
+  "approx_tflops": 2.56,
+  "runs": 50,
+  "matmul_size": 1024
 }
