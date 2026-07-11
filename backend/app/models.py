@@ -107,6 +107,13 @@ class AgentEvent(BaseModel):
     ok: bool = True       # False = this step flagged a problem
 
 
+class KnowledgeChunk(BaseModel):
+    """A retrieved ROCm/HIP migration doc snippet (RAG grounding for the agents)."""
+    text: str
+    source: str          # url or doc title
+    score: float = 0.0   # retrieval similarity
+
+
 class Artifact(BaseModel):
     name: str            # e.g. "Dockerfile.rocm"
     path: str            # relative to the run dir

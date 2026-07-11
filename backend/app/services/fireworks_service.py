@@ -14,6 +14,7 @@ import httpx
 from app.config import settings
 
 _BASE_URL = "https://api.fireworks.ai/inference/v1/chat/completions"
+_EMBED_URL = "https://api.fireworks.ai/inference/v1/embeddings"
 
 
 def complete(
@@ -54,4 +55,30 @@ def complete(
         return resp.json()["choices"][0]["message"]["content"]
     except (httpx.HTTPError, KeyError, IndexError):
         # Never let a flaky API break the demo — fall back deterministically.
+        return None
+
+
+def embed(texts: list[str]) -> Optional[list[list[float]]]:
+    """Return one embedding vector per input text, or None if unavailable.
+
+    Used by the knowledge base (ingestion + retrieval). Returns None when there's
+    no key or the API errors, so callers degrade to no-retrieval gracefully.
+    """
+    if not settings.fireworks_enabled or not texts:
+        return None
+    try:
+        resp = httpx.post(
+            _EMBED_URL,
+            headers={
+                "Authorization": f"Bearer {settings.fireworks_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={"model": settings.fireworks_embedding_model, "input": texts},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        data = resp.json()["data"]
+        # Preserve input order (the API returns an index per item).
+        return [item["embedding"] for item in sorted(data, key=lambda d: d["index"])]
+    except (httpx.HTTPError, KeyError, IndexError, TypeError):
         return None
