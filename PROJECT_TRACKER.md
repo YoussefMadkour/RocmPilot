@@ -43,7 +43,7 @@ and teach the codebase without gating the AI path.
 ## Phase 1 — Core loop solid  🟡 ([J] done; [Y] mostly done — scanner polish open)
 **Backend [Y]**
 - [x] Harden `repo_service.clone_repo` — scheme/host allowlist, SSRF guard, size/time limits, `GITHUB_TOKEN` + redaction (PR #2, 29 tests)
-- [ ] Expand scanner pattern catalogue; unit-test each category — Jith added 6 patterns; [Y] polish still open: dedupe duplicate rows per line, downweight `.md`/docs findings, point `.cu` blockers at HIPIFY
+- [x] Expand scanner pattern catalogue + polish — Jith added 6 patterns; [Y] added per-line dedupe (collapse same-line/same-category rows, keep most severe) and pointed `.cu`/CUDAExtension blockers at AMD HIPIFY tooling (PR #15, 4 tests). Deferred: downweight `.md`/docs findings (needs a scoring re-tune + band update — own pass).
 - [x] Lock scoring weights against 3 real repos — **rebuilt honest, count-sensitive model** (PR #3, 17 tests); see `docs/BENCHMARK_REPOS.md` + scoring decision
 
 **Backend [J] backend** (ramp-up tasks)

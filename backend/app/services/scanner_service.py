@@ -131,11 +131,13 @@ PATTERNS: list[Pattern] = [
     _p(r'\.cu[h]?["\'\s)]', FindingCategory.manual_blocker, Severity.critical,
        ActionType.manual_review,
        "References a custom CUDA kernel source (.cu/.cuh).",
-       "Requires HIPify/manual porting; flag for a human."),
+       "Port with AMD's HIPIFY tools (hipify-perl / hipify-clang) to HIP, then "
+       "rebuild for ROCm — flag for a human."),
     _p(r'load_inline|CUDAExtension|cpp_extension', FindingCategory.manual_blocker, Severity.critical,
        ActionType.manual_review,
        "Builds a custom native CUDA extension.",
-       "Custom kernels must be HIPified and rebuilt for ROCm."),
+       "HIPIFY the kernels (hipify-perl) and rebuild the extension against ROCm/HIP "
+       "(torch.utils.cpp_extension supports HIP) — flag for a human."),
 ]
 
 # Artifacts we expect an AMD-ready repo to have. Absence => a "missing_artifact" finding.
@@ -154,6 +156,26 @@ def _iter_files(root: Path):
             continue
         if path.name in SCANNABLE_NAMES or path.suffix in SCANNABLE_SUFFIXES:
             yield path
+
+
+_SEVERITY_RANK = {Severity.critical: 0, Severity.high: 1, Severity.medium: 2, Severity.low: 3}
+
+
+def _dedupe(findings: list[Finding]) -> list[Finding]:
+    """Collapse rows where multiple patterns flag the same line for the same reason.
+
+    Keyed by (file, line, category, matched_text): two patterns hitting one line
+    in the same category produce identical rows that inflate the table and score,
+    so keep just the most-severe one. Distinct categories on a line, and the
+    per-artifact missing_artifact rows (distinct matched_text), are preserved.
+    """
+    best: dict[tuple, Finding] = {}
+    for f in findings:
+        key = (f.file_path, f.line_number, f.category, f.matched_text)
+        cur = best.get(key)
+        if cur is None or _SEVERITY_RANK[f.severity] < _SEVERITY_RANK[cur.severity]:
+            best[key] = f
+    return list(best.values())
 
 
 def scan(root: Path) -> tuple[list[Finding], int]:
@@ -199,7 +221,7 @@ def scan(root: Path) -> tuple[list[Finding], int]:
                 action_type=ActionType.auto_patch,
             ))
 
-    return findings, files_scanned
+    return _dedupe(findings), files_scanned
 
 
 def count_by_category(findings: list[Finding]) -> dict[str, int]:
