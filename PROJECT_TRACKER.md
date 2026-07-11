@@ -78,10 +78,10 @@ and teach the codebase without gating the AI path.
 
 ---
 
-## Phase 3 — Patch + Validate  🟡 ([J] done; [Y] mostly done — live validation open)
+## Phase 3 — Patch + Validate  🟢 ([J] + [Y] done)
 **Backend [Y]**
 - [x] Improve patch transforms — now guards `.cuda()`, `.to("cuda")`, `torch.device("cuda")`; conservative + idempotent (PR #10, +5 tests)
-- [ ] Implement `live` validation mode (build `Dockerfile.rocm`, run smoke+bench, parse logs)
+- [x] Implement `live` validation mode — build `Dockerfile.rocm`, run smoke+bench, **parse stdout** into a ValidationResult; graceful fallback to replay when Docker/AMD unavailable. Parser unit-tested; the docker path needs a real AMD host to exercise.
 - [x] Wire Failure Diagnoser into the validate path on failure + `VALIDATION_MODE=replay_fail` demo mode; UI panel renders `validation.diagnosis` (PR #9, 4 tests)
 
 **Backend [J] backend**
@@ -148,6 +148,9 @@ flash-attention ~17) are the honest low end / Tier-2 backlog.
 - Custom CUDA kernels (`.cu`/`.cuh`), native extensions → flagged, not solved.
   **Tier 2** repos (detectron2, mmcv, flash-attention, apex) are deferred until
   the Tier 1 application-repo pipeline is polished — see `docs/BENCHMARK_REPOS.md`.
-- `live` AMD validation is scaffolded; demo runs on a **saved** AMD run (replay).
+- `live` AMD validation is implemented (docker build + run + log parser) but
+  needs a real AMD/ROCm host; without one it falls back to the **saved** run
+  (replay), which is what the demo uses. Capturing a genuine AMD Dev Cloud log
+  into `fixtures/` is still a TODO.
 - No automatic GitHub PR creation yet (roadmap).
 - Single-run filesystem store; no multi-user history yet.
