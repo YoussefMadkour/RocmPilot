@@ -132,7 +132,8 @@ class ValidationResult(BaseModel):
     benchmark_passed: bool = False
     inference_latency_ms: Optional[float] = None
     logs: str = ""
-    diagnosis: Optional[str] = None   # Failure Diagnoser output; set only on failure
+    diagnosis: Optional[str] = None        # Failure Diagnoser output; set only on failure
+    diagnosis_model: Optional[str] = None  # which model produced the diagnosis
 
 
 # --------------------------------------------------------------------------- #
@@ -204,3 +205,4 @@ class ReportResponse(BaseModel):
     markdown: str
     score: ScoreBreakdown
     artifacts: list[Artifact]
+    model: Optional[str] = None   # which model wrote the report

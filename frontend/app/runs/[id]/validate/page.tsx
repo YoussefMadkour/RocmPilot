@@ -160,9 +160,16 @@ export default function ValidatePage() {
       {/* Failure diagnosis — only when the run actually failed */}
       {failed && (
         <section className="rounded-xl border border-ember/40 bg-panel p-6">
-          <h2 className="font-display text-sm font-semibold tracking-wide text-ember">
-            Failure diagnosis
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-sm font-semibold tracking-wide text-ember">
+              Failure diagnosis
+            </h2>
+            {validation.diagnosis_model && (
+              <span className="rounded border border-accent/40 bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-accent">
+                {validation.diagnosis_model}
+              </span>
+            )}
+          </div>
           {validation.diagnosis ? (
             <div className="report-md mt-2 text-sm">
               <Markdown>{validation.diagnosis}</Markdown>

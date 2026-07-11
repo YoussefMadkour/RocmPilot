@@ -89,6 +89,7 @@ export interface ValidationResult {
   inference_latency_ms: number | null;
   logs: string;
   diagnosis: string | null;
+  diagnosis_model: string | null;
 }
 
 export interface RunSummary {
@@ -159,9 +160,13 @@ export const api = {
       { method: "POST" },
     ),
   report: (id: string) =>
-    request<{ run_id: string; markdown: string; score: ScoreBreakdown; artifacts: Artifact[] }>(
-      `/api/runs/${id}/report`,
-    ),
+    request<{
+      run_id: string;
+      markdown: string;
+      score: ScoreBreakdown;
+      artifacts: Artifact[];
+      model: string | null;
+    }>(`/api/runs/${id}/report`),
   artifact: (id: string, name: string) =>
     request<{ run_id: string; name: string; content: string }>(
       `/api/runs/${id}/artifacts/${name}`,

@@ -36,6 +36,7 @@ export default function ReportPage() {
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [score, setScore] = useState<ScoreBreakdown | null>(null);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [model, setModel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
@@ -48,6 +49,7 @@ export default function ReportPage() {
         setMarkdown(res.markdown);
         setScore(res.score);
         setArtifacts(res.artifacts);
+        setModel(res.model);
       })
       .catch((e) =>
         setError(e instanceof Error ? e.message : "Report generation failed"),
@@ -129,9 +131,16 @@ export default function ReportPage() {
 
       {/* The judge-ready report */}
       <section className="rounded-xl border border-edge bg-panel p-6">
-        <p className="font-mono text-[11px] tracking-widest text-ink-dim">
-          REPORT WRITER · READINESS_REPORT.MD
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-mono text-[11px] tracking-widest text-ink-dim">
+            REPORT WRITER · READINESS_REPORT.MD
+          </p>
+          {model && (
+            <span className="rounded border border-accent/40 bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-accent">
+              {model}
+            </span>
+          )}
+        </div>
         <div className="report-md mt-4">
           <Markdown>{markdown}</Markdown>
         </div>

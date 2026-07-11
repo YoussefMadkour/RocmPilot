@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from app.agents import orchestrator
+from app.config import settings
 from app.models import (
     AgentEvent,
     Artifact,
@@ -264,7 +265,10 @@ def get_report(run_id: str) -> ReportResponse:
         stage=RunStage.reported.value,
         artifacts=[a.model_dump(mode="json") for a in artifacts],
     )
-    return ReportResponse(run_id=run_id, markdown=markdown, score=score, artifacts=artifacts)
+    report_model = settings.report_model.split("/")[-1] if settings.fireworks_enabled else None
+    return ReportResponse(
+        run_id=run_id, markdown=markdown, score=score, artifacts=artifacts, model=report_model
+    )
 
 
 # --------------------------------------------------------------------------- #

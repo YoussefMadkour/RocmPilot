@@ -176,6 +176,10 @@ def validate(run_id: str) -> ValidationResult:
     # A failed run is exactly when the Failure Diagnoser earns its keep.
     if result.status == ValidationStatus.failed:
         result.diagnosis = failure_diagnoser.diagnose(result.logs)
+        result.diagnosis_model = (
+            settings.research_model.split("/")[-1] if settings.fireworks_enabled
+            else "deterministic"
+        )
 
     run_store.write_artifact(run_id, "validation_log.txt", result.logs)
     return result
