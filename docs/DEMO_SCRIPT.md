@@ -24,15 +24,40 @@
 - **Multi-model + RAG** — best-fit model per role, an independent-model critic, and
   cited diagnoses from a ROCm/HIP knowledge base.
 
+## ⚠️ Pre-warm the run (do this before you present)
+Measured cold latency with live models: **scan ~0s · plan ~40s · patch ~10s ·
+validate ~0s · report ~13s**. The reasoning models are worth it, but **40s of
+Plan spinner will kill a live demo.**
+
+The fix is built in: **pre-warm one run, then present off the cache.**
+1. Before you go on: create the demo run and click through all six screens once
+   (this runs every agent and caches the output).
+2. On stage, open the run by its URL (or from **Recent runs** on Intake) and walk
+   the screens — each hydrates instantly from `GET /api/runs/{id}` (no re-running).
+3. Only run a stage *live* if you specifically want to show the agents working
+   (e.g. a fresh Scan, which is instant anyway).
+
+## Shot list (what's on screen at each beat)
+- **Scan:** honest before-score; category filter chips; the **kernel-risk callout**
+  ("N kernel-level hazards hipify can't auto-port") → click *Show them* to reveal
+  the warp/wavefront/CUTLASS findings.
+- **Plan:** agent summary; prioritized actions; **Critic review** badge
+  (approved/issues); **Agent activity** timeline with **model badges**
+  (`deepseek-v4-pro` on planner, `glm-5p2` on critic).
+- **Patch:** diff viewer + artifact tabs + **Patch Explainer** per-change notes.
+- **Validate:** AMD card, **"Saved AMD run · replay"** badge, GPU/latency stats.
+  *(Optional wow:* set `VALIDATION_MODE=replay_fail` on a second run — the failure
+  panel shows a **cited diagnosis with a `kimi-k2p6` badge`.)*
+- **Report:** before→72→86 journey; rendered report with a **`glm-5p2`** badge;
+  Download report / Download all (.zip).
+
 ## Rules for a clean demo
-- Pre-create one run before presenting as a fallback (replay validation makes this
-  safe and repeatable).
 - Never hide replay mode — judges respect the honesty, and the pipeline runs real
-  AMD hardware when a live host is attached.
+  AMD hardware when a live host is attached (see `docs/AMD_SETUP.md`).
 - If Fireworks is slow/down, every agent has a deterministic fallback — the plan,
   patches, diagnosis, and report still render. Don't panic.
-- Reasoning models take a few seconds to think; have a pre-warmed run ready if you
-  want the plan instant on stage.
+- Have the pre-warmed run's URL on a sticky note; a second `replay_fail` run ready
+  for the diagnosis moment.
 
 ## Showcase repos
 - `https://github.com/karpathy/nanoGPT` — primary; clean, famous, believable jump.

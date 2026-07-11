@@ -40,14 +40,23 @@ python -c "import torch; print(torch.cuda.is_available(), torch.version.hip)"
 ## Testing on AMD — two ways
 
 ### A. Capture a run → replay (demo-safe, recommended for the demo)
-On the AMD box, from the repo root:
+
+**On an AMD box with Docker** (repo cloned):
 ```bash
 bash scripts/capture_amd_run.sh
 ```
-It runs the smoke test + benchmark in a `rocm/pytorch` container (with
-`--device=/dev/kfd --device=/dev/dri --group-add video`) and writes
-`backend/app/fixtures/validation_log.txt` + `benchmark.json`. Commit those; the
-Validate screen's `replay` now shows genuine MI300X numbers (always labeled as a
+
+**In an AMD AI Notebook / Jupyter Lab (no Docker)** — use the self-contained
+single file `scripts/amd_capture.py`. Upload it and run any of:
+```bash
+python amd_capture.py        # Lab terminal
+%run amd_capture.py          # notebook cell
+```
+It only needs `torch`, runs the same smoke test + benchmark, and writes
+`validation_log.txt` + `benchmark.json` in RocmPilot's exact format.
+
+Either way, copy the two files into `backend/app/fixtures/` and commit them; the
+Validate screen's `replay` then shows genuine MI300X numbers (always labeled as a
 saved run — we never fake it).
 
 ### B. Live mode (end-to-end on the AMD host)
