@@ -11,8 +11,11 @@ from __future__ import annotations
 import io
 import zipfile
 
+import json
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.responses import Response
 
 from app.agents import orchestrator
@@ -66,6 +69,14 @@ def _require_run(run_id: str) -> dict:
 
 def _score_from_state(state: dict) -> ScoreBreakdown:
     return ScoreBreakdown(**state.get("score", {"before": 0}))
+
+
+def _sse(event: str, data: dict) -> str:
+    """Format one Server-Sent Event."""
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+_SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
 
 @app.get("/api/health")
@@ -196,6 +207,43 @@ def plan_run(run_id: str) -> PlanResponse:
 
 
 # --------------------------------------------------------------------------- #
+# GET /api/runs/{id}/plan/stream — same plan, streamed live (SSE) for the UI
+# --------------------------------------------------------------------------- #
+@app.get("/api/runs/{run_id}/plan/stream")
+def plan_stream(run_id: str) -> StreamingResponse:
+    state = _require_run(run_id)
+    if "findings" not in state:
+        raise HTTPException(status_code=409, detail="Run must be scanned before planning")
+    findings = [Finding.model_validate(f) for f in state["findings"]]
+
+    def gen():
+        plan = critique = None
+        trace: list = []
+        for kind, payload in orchestrator.plan_events(findings, run_id):
+            if kind == "status":
+                yield _sse("status", {"message": payload})
+            elif kind == "event":
+                yield _sse("trace", payload.model_dump(mode="json"))
+            elif kind == "result":
+                plan, critique, trace = payload
+        run_store.update_state(
+            run_id,
+            stage=RunStage.planned.value,
+            plan=plan.model_dump(mode="json"),
+            critique=critique.model_dump(mode="json"),
+            plan_trace=[e.model_dump(mode="json") for e in trace],
+        )
+        yield _sse("done", {
+            "run_id": run_id,
+            "plan": plan.model_dump(mode="json"),
+            "critique": critique.model_dump(mode="json"),
+            "trace": [e.model_dump(mode="json") for e in trace],
+        })
+
+    return StreamingResponse(gen(), media_type="text/event-stream", headers=_SSE_HEADERS)
+
+
+# --------------------------------------------------------------------------- #
 # POST /api/runs/{id}/patch — generate diff + ROCm artifacts
 # --------------------------------------------------------------------------- #
 @app.post("/api/runs/{run_id}/patch", response_model=PatchResponse)
@@ -213,6 +261,40 @@ def patch_run(run_id: str) -> PatchResponse:
         patch_explanations=[e.model_dump(mode="json") for e in explanations],
     )
     return PatchResponse(run_id=run_id, artifacts=artifacts, explanations=explanations, score=score)
+
+
+# --------------------------------------------------------------------------- #
+# GET /api/runs/{id}/patch/stream — same patch, streamed live (SSE)
+# --------------------------------------------------------------------------- #
+@app.get("/api/runs/{run_id}/patch/stream")
+def patch_stream(run_id: str) -> StreamingResponse:
+    state = _require_run(run_id)
+    if "findings" not in state:
+        raise HTTPException(status_code=409, detail="Run must be scanned before patching")
+    score = _score_from_state(state)
+
+    def gen():
+        artifacts: list = []
+        explanations: list = []
+        for kind, payload in patch_service.generate_events(run_id):
+            if kind == "status":
+                yield _sse("status", {"message": payload})
+            elif kind == "result":
+                artifacts, explanations = payload
+        run_store.update_state(
+            run_id,
+            stage=RunStage.patched.value,
+            artifacts=[a.model_dump(mode="json") for a in artifacts],
+            patch_explanations=[e.model_dump(mode="json") for e in explanations],
+        )
+        yield _sse("done", {
+            "run_id": run_id,
+            "artifacts": [a.model_dump(mode="json") for a in artifacts],
+            "explanations": [e.model_dump(mode="json") for e in explanations],
+            "score": score.model_dump(mode="json"),
+        })
+
+    return StreamingResponse(gen(), media_type="text/event-stream", headers=_SSE_HEADERS)
 
 
 # --------------------------------------------------------------------------- #

@@ -33,12 +33,13 @@ export default function PatchPage() {
   const [explanations, setExplanations] = useState<PatchExplanation[]>([]);
   const [contents, setContents] = useState<Record<string, string>>({});
   const [active, setActive] = useState<string>("patch.diff");
+  const [status, setStatus] = useState<string>("Generating patch.diff and ROCm artifacts…");
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
     if (!id || started.current) return;
-    started.current = true; // avoid double-POST from React strict mode
+    started.current = true; // avoid double-run from React strict mode
     const finish = async (arts: Artifact[], exps: PatchExplanation[]) => {
       setArtifacts(arts);
       setExplanations(exps);
@@ -47,20 +48,37 @@ export default function PatchPage() {
       );
       setContents(Object.fromEntries(loaded));
     };
-    const runPatch = () =>
+    const fallback = () =>
       api
         .patch(id)
         .then((res) => finish(res.artifacts, res.explanations ?? []))
         .catch((e) => setError(e instanceof Error ? e.message : "Patch generation failed"));
-    // Reuse cached artifacts if patching already ran; otherwise generate once.
+
     api
       .getRun(id)
-      .then((run) =>
-        run.artifacts && run.artifacts.length
-          ? finish(run.artifacts, run.explanations ?? [])
-          : runPatch(),
-      )
-      .catch(runPatch);
+      .then((run) => {
+        if (run.artifacts && run.artifacts.length) {
+          finish(run.artifacts, run.explanations ?? []); // cached → instant
+          return;
+        }
+        // Live stream patch generation (SSE): status lines as each step runs.
+        let finished = false;
+        const es = new EventSource(api.patchStreamUrl(id));
+        es.addEventListener("status", (e) =>
+          setStatus(JSON.parse((e as MessageEvent).data).message),
+        );
+        es.addEventListener("done", (e) => {
+          finished = true;
+          const d = JSON.parse((e as MessageEvent).data);
+          finish(d.artifacts, d.explanations ?? []);
+          es.close();
+        });
+        es.onerror = () => {
+          es.close();
+          if (!finished) fallback();
+        };
+      })
+      .catch(fallback);
   }, [id]);
 
   function download(name: string) {
@@ -95,7 +113,7 @@ export default function PatchPage() {
         <h1 className="font-display text-2xl font-semibold">Patch</h1>
         <p className="mt-3 font-mono text-sm text-ink-dim">
           <span className="led-pulse mr-2 inline-block h-2 w-2 rounded-full bg-ember" />
-          Generating patch.diff and ROCm artifacts…
+          {status}
         </p>
       </section>
     );

@@ -21,31 +21,52 @@ export default function PlanPage() {
   const [plan, setPlan] = useState<MigrationPlan | null>(null);
   const [critique, setCritique] = useState<Critique | null>(null);
   const [trace, setTrace] = useState<AgentEvent[]>([]);
+  const [status, setStatus] = useState<string>("Orchestrating the agents…");
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
     if (!id || started.current) return;
-    started.current = true; // avoid double-POST from React strict mode
-    const hydrate = (res: { plan: MigrationPlan; critique: Critique | null; trace: AgentEvent[] }) => {
-      setPlan(res.plan);
-      setCritique(res.critique);
-      setTrace(res.trace);
+    started.current = true; // avoid double-run from React strict mode
+    const hydrate = (p: MigrationPlan, c: Critique | null, t: AgentEvent[]) => {
+      setPlan(p);
+      setCritique(c);
+      setTrace(t);
     };
-    // Read the cached plan if this step already ran; otherwise run it once.
+    const fallback = () =>
+      api
+        .plan(id)
+        .then((r) => hydrate(r.plan, r.critique, r.trace))
+        .catch((e) => setError(e instanceof Error ? e.message : "Planning failed"));
+
     api
       .getRun(id)
-      .then((run) =>
-        run.plan
-          ? hydrate({ plan: run.plan, critique: run.critique, trace: run.trace ?? [] })
-          : api.plan(id).then(hydrate),
-      )
-      .catch(() =>
-        api
-          .plan(id)
-          .then(hydrate)
-          .catch((e) => setError(e instanceof Error ? e.message : "Planning failed")),
-      );
+      .then((run) => {
+        if (run.plan) {
+          hydrate(run.plan, run.critique, run.trace ?? []); // cached → instant
+          return;
+        }
+        // Live stream the orchestration (SSE): status lines + trace as it happens.
+        let finished = false;
+        const es = new EventSource(api.planStreamUrl(id));
+        es.addEventListener("status", (e) =>
+          setStatus(JSON.parse((e as MessageEvent).data).message),
+        );
+        es.addEventListener("trace", (e) =>
+          setTrace((prev) => [...prev, JSON.parse((e as MessageEvent).data)]),
+        );
+        es.addEventListener("done", (e) => {
+          finished = true;
+          const d = JSON.parse((e as MessageEvent).data);
+          hydrate(d.plan, d.critique, d.trace);
+          es.close();
+        });
+        es.onerror = () => {
+          es.close();
+          if (!finished) fallback(); // SSE unsupported/proxied → one-shot POST
+        };
+      })
+      .catch(fallback);
   }, [id]);
 
   if (error)
@@ -68,10 +89,35 @@ export default function PlanPage() {
     return (
       <section className="rounded-xl border border-edge bg-panel p-6">
         <h1 className="font-display text-2xl font-semibold">Plan</h1>
+        {/* Live status line from the orchestration stream */}
         <p className="mt-3 font-mono text-sm text-ink-dim">
           <span className="led-pulse mr-2 inline-block h-2 w-2 rounded-full bg-ember" />
-          Orchestrating: Planner is drafting, Critic will review…
+          {status}
         </p>
+        {/* Agent trace, appearing live as each agent acts */}
+        {trace.length > 0 && (
+          <ol className="mt-5 space-y-0 border-t border-edge pt-4">
+            {trace.map((e, i) => (
+              <li key={i} className="flex gap-3 pb-3 last:pb-0">
+                <span
+                  className={`mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full ${e.ok ? "bg-ready" : "bg-ember"}`}
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <span className="mr-2 rounded border border-edge px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ink-dim">
+                    {e.agent}
+                  </span>
+                  {e.model && (
+                    <span className="mr-2 rounded border border-accent/40 bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-accent">
+                      {e.model}
+                    </span>
+                  )}
+                  <span className="text-xs text-ink-dim">{e.message}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
     );
 
