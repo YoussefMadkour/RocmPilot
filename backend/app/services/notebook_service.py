@@ -40,14 +40,17 @@ def run_on_amd_notebook(run_id: str) -> str:
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
                 "certifi", "numpy", "transformers", "tiktoken"], check=True)
 import certifi
+# Point Python AND git at certifi's CA bundle so TLS is still VERIFIED even on a
+# Lab image that ships no system CA (that was the clone failure — missing CAs,
+# not bad certs). We verify against certifi rather than disabling verification.
 os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+os.environ["GIT_SSL_CAINFO"] = certifi.where()
 
 # 1) Clone the repo RocmPilot analyzed.
 REPO_URL = {repo_url!r}
 if REPO_URL and not os.path.isdir("repo"):
-    subprocess.run(["git", "-c", "http.sslVerify=false", "clone", "--depth", "1",
-                    REPO_URL, "repo"], check=True)
+    subprocess.run(["git", "clone", "--depth", "1", REPO_URL, "repo"], check=True)
 if os.path.isdir("repo"):
     os.chdir("repo")
 
