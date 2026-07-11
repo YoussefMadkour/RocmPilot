@@ -30,11 +30,23 @@ _CPU_HINTS = ("EPYC", "Ryzen", "Threadripper", "Core Processor", "Xeon", "Intel"
 
 
 def _gpu_name() -> str:
-    """The accelerator's name. torch is the source of truth; rocminfo is a
-    fallback that must SKIP the CPU agent (rocminfo lists the CPU first)."""
+    """The accelerator's name. Some ROCm builds return an empty device name, so
+    fall through: get_device_name -> device properties (name / gcnArchName) ->
+    rocminfo (skipping the CPU agent, which rocminfo lists first)."""
     if torch.cuda.is_available():
         try:
-            return torch.cuda.get_device_name(0)
+            n = torch.cuda.get_device_name(0)
+            if n and n.strip():
+                return n.strip()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            p = torch.cuda.get_device_properties(0)
+            if getattr(p, "name", "").strip():
+                return p.name.strip()
+            arch = getattr(p, "gcnArchName", "")
+            if arch:
+                return f"AMD GPU ({arch})"
         except Exception:  # noqa: BLE001
             pass
     try:
