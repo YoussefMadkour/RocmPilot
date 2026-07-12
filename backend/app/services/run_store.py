@@ -45,7 +45,7 @@ def list_runs() -> list[dict[str, Any]]:
         RUNS_DIR.glob("*/state.json"), key=lambda p: p.stat().st_mtime, reverse=True
     ):
         try:
-            states.append(json.loads(path.read_text()))
+            states.append(json.loads(path.read_text(encoding="utf-8")))
         except (OSError, json.JSONDecodeError):
             continue
     return states
@@ -56,11 +56,11 @@ def exists(run_id: str) -> bool:
 
 
 def load_state(run_id: str) -> dict[str, Any]:
-    return json.loads(_state_path(run_id).read_text())
+    return json.loads(_state_path(run_id).read_text(encoding="utf-8"))
 
 
 def save_state(run_id: str, state: dict[str, Any]) -> None:
-    _state_path(run_id).write_text(json.dumps(state, indent=2, default=str))
+    _state_path(run_id).write_text(json.dumps(state, indent=2, default=str), encoding="utf-8")
 
 
 def update_state(run_id: str, **fields: Any) -> dict[str, Any]:
@@ -73,10 +73,10 @@ def update_state(run_id: str, **fields: Any) -> dict[str, Any]:
 def write_artifact(run_id: str, name: str, content: str) -> Path:
     path = run_dir(run_id) / name
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content)
+    path.write_text(content, encoding="utf-8")
     return path
 
 
 def read_artifact(run_id: str, name: str) -> Optional[str]:
     path = run_dir(run_id) / name
-    return path.read_text() if path.exists() else None
+    return path.read_text(encoding="utf-8") if path.exists() else None
