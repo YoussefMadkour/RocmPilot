@@ -34,6 +34,14 @@ body {
   animation: led-pulse 1.6s ease-in-out infinite;
 }
 
+/* Scrollable but without a visible scrollbar (mobile stage rail). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Rendered Markdown (Report screen). Scoped so it can't leak into app chrome. */
 .report-md h1,
 .report-md h2,

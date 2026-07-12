@@ -9,6 +9,6 @@ from app.services import run_store
 
 
 def generate(run_id: str) -> str:
-    template = (TEMPLATES_DIR / "smoke_test.py.template").read_text()
+    template = (TEMPLATES_DIR / "smoke_test.py.template").read_text(encoding="utf-8")
     run_store.write_artifact(run_id, "smoke_test.py", template)
     return template

@@ -1,7 +1,5 @@
 # RocmPilot Studio — design direction
 
-*(Phase 1 note, as requested in FOR_JITHENDRA.md — keep every screen consistent with this.)*
-
 ## Concept: engine-bay cockpit
 
 The UI is an instrument panel for a six-stage flight: Intake → Scan → Plan →
