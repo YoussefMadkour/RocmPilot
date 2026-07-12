@@ -334,6 +334,14 @@ def get_report(run_id: str) -> ReportResponse:
     validation = ValidationResult.model_validate(state["validation"])
     score = _score_from_state(state)
 
+    # Return the cached report on revisit (don't re-run the LLM every GET) — keeps
+    # the Report screen instant, matching the other cached stages.
+    if state.get("stage") == RunStage.reported.value:
+        cached = run_store.read_artifact(run_id, "readiness_report.md")
+        if cached:
+            return ReportResponse(run_id=run_id, markdown=cached, score=score,
+                                  artifacts=artifacts, model=state.get("report_model"))
+
     markdown = report_service.build(run_id, state["source"], plan, artifacts, validation, score)
 
     # Register the report itself as an artifact so "download everything"
@@ -343,12 +351,13 @@ def get_report(run_id: str) -> ReportResponse:
     if not any(a.name == report_artifact.name for a in artifacts):
         artifacts.append(report_artifact)
 
+    report_model = settings.report_model.split("/")[-1] if settings.fireworks_enabled else None
     run_store.update_state(
         run_id,
         stage=RunStage.reported.value,
         artifacts=[a.model_dump(mode="json") for a in artifacts],
+        report_model=report_model,
     )
-    report_model = settings.report_model.split("/")[-1] if settings.fireworks_enabled else None
     return ReportResponse(
         run_id=run_id, markdown=markdown, score=score, artifacts=artifacts, model=report_model
     )
