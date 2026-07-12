@@ -18,7 +18,7 @@ const STAGE_SEGMENT: Record<RunStage, string> = {
   reported: "report",
 };
 
-// Verified CUDA-first showcase repos from PROJECT_TRACKER.md.
+// Verified CUDA-first showcase repos.
 const SUGGESTED = [
   "https://github.com/karpathy/nanoGPT",
   "https://github.com/ultralytics/yolov5",

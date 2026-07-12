@@ -273,7 +273,6 @@ docs/
   screenshots/           README gallery
 scripts/                 AMD capture + patched-nanoGPT notebooks
 PITCH.md                 the submission story: problem, decisions, results
-PROJECT_TRACKER.md       phases, owners, acceptance criteria
 ```
 
 ## Testing & CI
